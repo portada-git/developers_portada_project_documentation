@@ -2,7 +2,7 @@
 ## Manual para desarrolladores: Extracción de información de noticias en el contexto del proyecto portada
 Este manual se ha creado básicamente para ayudar a los desarrolladores del proyecto **_PortAda_** a configurar la aplicación *[jportada_boat_fact_extractor](https://github.com/portada-git/jportada_boat_fact_extractor)* para conseguir extraer los datos referentes a las embarcaciones llegadas a los diferentes puertos de estudio referenciadas en los periódicos estudiados.
 
-## Consideraciones previas 
+## Consideraciones previas sobre la biblioteca _jportada_auto_news_extractor_lib_
 La aplicación *[jportada_boat_fact_extractor](https://github.com/portada-git/jportada_boat_fact_extractor)*  está basada en la biblioteca *[jportada_auto_news_extractor_lib](https://github.com/portada-git/jportada_auto_news_extractor_lib)*, la cual presenta 3 funcionalidades necesarias para realizar la extracción en el contexto del proyecto portada.
 
 ### Funcionalidades de *jportada_auto_news_extractor_lib*
@@ -96,6 +96,7 @@ En este caso existirán dos enfoques metodológicos para realizar la extracción
 La biblioteca *[jportada_auto_news_extractor_lib](https://github.com/portada-git/jportada_auto_news_extractor_lib)* se ha diseñado para permitir diversos enfoques metodológicos en el tratamiento de la extracción. A fin de facilitar el desarrollo de los enfoques actuales y permitir futuras alternativas, la biblioteca dispone de un conjunto de proxies capaces de manejar, de forma transparente, múltiples enfoques que respondan a una funcionalidad determinada, organizada alrededor de una interfaz.
 
 ![diagrama UML del patron proxy](media/proxy_annotation_system.jpg)
+
 Se ha implementado 4 patrones diferentes de tipo proxy. Uno para cada funcionalidad (ensamblaje de archivos, segregación de fragmentos-objetivo y analizador de contenido) y un cuarto sistema para gestionar los llamados calculadores de campos. Al iniciarse la ejecución, cada proxy busca entre un conjunto definido de  paquetes, las classes anotadas por una anotación de marcaje asociada al proxy. Al iniciarse la ejecución, el proxy usará su anotación asociada para  encontrar todas las classes que implementen la interficie vinculada al proxy y así gestionar la delegación de las peticiones de los clientes en función de un parámetro de selección (el enfoque)
 
 ### Configuración
