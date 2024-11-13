@@ -180,6 +180,9 @@ En el fichero de configuración se admiten todos los argumentos aceptados por co
 
 #### conjunto de expresiones regulares
 A fin de poder generar expresiones regulares complejas, la biblioteca _jportada_auto_news_extractor_lib_ permite definir múltiples ficheros con expresiones regulares parciales que pueden ser usadas para componer nuevas expresiones regulares, las cuales podrían ser usadas de nuevo, recursivamente, como componentes de otras expresiones. 
+
+##### Composición de expresiones regulares complejas
+
 Una expresión compuesta podría ser: 
 ```
 ^(.*{##embarcaciones##} {##llegadas##} .{2,7} {##puerto##}.{8,25})\s+$
@@ -205,7 +208,30 @@ La expresión final conseguida con el ejemplo anterior sería:
 ^(.*[EA]{2,3}barca.{2,4}nes (?:(?:[|i¡l][|i¡l])|(?:[UHN]))[eoa]g[aoeu]d.. .{2,7} p[uo][eo]rt[oe].{8,25})\s+$
 ``` 
 
+##### Directorios de búsqueda de los archivos de expresiones regulares
 
+Cabe tener en cuenta que la biblioteca _jportada_auto_news_extractor_lib_ dispone de un sistema de búsqueda del los archivos (.regex) con las expresiones a sustituir, bastante flexible. Estos archivos se encuentran ubicados en diversos directorios ramificados a partir de un directorio raíz de manera que forman una estructura jerárquica. 
+
+![Estructura jerárquica de la ubicación de los archivos .regex](media/jerarquiaRegex.png)
+
+Dicha jerarquía, actualmente está pensada para tener 4 niveles de profundidad a partir de la raíz. El directorio raíz representaría el nivel 0 y en él se ubicarían archivos con expresiones regulares muy genéricas, las cuales puedan usarse como componentes de otras expresiones de extracción en cualquier tipo de noticias; por ejemplo, la expresión regular para identificar la palabra "idem" o equivalente, o quizás, la expresión ampliada del concepto dígito para textos OCR de baja calidad. El primer nivel hace referencia al tipo de hecho o noticia (en el caso de portada "*boatfacts*"). Allí, deberíamos encontrar expresiones regulares para usar como componentes de otras más complejas, las cuales (las primeras) se consideren específicas del tipo de noticias, pero suficientemente genéricas  como para poderlas compartir entre distintas noticias del mismo tipo pero de distintos periódicos. Por  ejemplo, la expresión regular que define la palabra "*embarcaciones*" podría, seguramente,  ser reutilizada en múltiples noticias de entradas o salidas de barcos indistintamente del periódico donde estuvieran escritas. El siguiente nivel representa el periódico (db, dm, en, lp, sm, ...) y en él se ubican expresiones específicas para un tipo de noticia de un periódico determinado. Por ejemplo, si en el Diario de Barcelona (db) las banderas de los barcos que rezan a continuación de la primera suelen empezar por la palabra "idem" seguida de la nacionalidad (idem francesas, idem inglesas, ...) donde idem hace referencia al propósito de las embarcaciones de la primera bandera (generalmente "mercantes españolas"), parece razonable que este periódico y no otro disponga de una expresión regular para descubrir la palabra idem solamente si se encuentra en el principio de línea y si va seguida de una única palabra. El tercer nivel de profundidad permite definir: o bien expresiones regulares muy específicas del modelo de extractor a utilizar, o bien las expresiones regulares iniciales a partir de las cuales el sistema montará la expresión regular compleja, sustituyendo recursivamente los componentes que cada una de ellas pudiera tener. Las expresiones regulares iniciales deberán tener también un archivo con el mismo nombre i extensión *.options* donde se definirán las opciones (banderas) de proceso de la expresión regular final. Las opciones, siguiendo las notaciones estandardizadas de las expresiones regulares, se indican con una letra y pueden tomar uno o más valores de la siguiente colección; g (búsqueda global), m (búsqueda multilínea), i (búsqueda sin distinguir entre mayúsculas o minúsculas - case **i**nsensitive), s (búsqueda de saltos de línea incluidos, se toma toda la cadena como si fura una línea única), U (la búsqueda soporta los caracteres unicode), u (si está marcada la bandera i, los caracteres unicode especiales se buscan también sin tener en cuanta las mayúsculas o minúsculas).
+
+El sistema es capaz de encontrar el nombre de un archivo con extensión .regex o .options, se encuentre donde se encuentre dentro de la jerarquía definida a partir del directorio raíz. Además, la búsqueda se realiza de dentro a fuera, de manera que los más específicos se descubren antes que los más genéricos. De esta forma, aunque hubiera ficheros con nombres repetidos, el sistema encontraría primero siempre el más específico. Así, si un extractor de expresiones regulares tiene un componente que no se acaba de adaptar, puede crear otro con el mismo nombre en un nivel más profundo.
+
+##### Contenido de las expresiones regulares
+
+El contenido de los ficheros .regex debe ser una expresión regular válida con dos excepciones: los componentes de sustitución que siempre tendrán el formato `{##nombre_archivo##}` y los saltos de línea, que al hacer la composición, se tomarán como  expresiones alternativas. Esto es, que un fichero conteniendo:
+
+```
+E[mn]b.*[eo][s5]
+[EA]{2,3}barca.{2,4}nes
+.{1,3}barc.{1,2}c[i¡Il1][oec]n[eosc]
+``` 
+Al resolverse se construiría la expresión compleja siguiente:
+```
+(:?E[mn]b.*[eo][s5])|(:?[EA]{2,3}barca.{2,4}nes)|(:?.{1,3}barc.{1,2}c[i¡Il1][oec]n[eosc])
+```
+Esta "sintaxis" facilita mucho la creación de expresiones regulares muy complejas usando las propiedades de la sustitución y la búsqueda descritas en loas apartados anteriores, con una mirada más "humana", en el sentido de comprender e interpretar rápidamente las diferentes partes de la expresión compleja.
 
 #### Configuración del extractor
 
