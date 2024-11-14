@@ -5,6 +5,8 @@ Este manual se ha creado básicamente para ayudar a los desarrolladores del proy
 
 Para facilitar la configuración de los extractores, se ha desarrollado una aplicación no integrada en PAPICLI de uso exclusivo para desarrolladores. Se puede conseguir en el enlace [autoNewsExtractor.zip](https://drive.google.com/file/d/12NaBfcW54yxIm0oAs6Oyro-BHDF1RnHN/view?usp=sharing). Dicho enlace solo contiene los ejecutables y scripts para preparar la extracción.  El código de dicha aplicación se encuentra en el siguiente repositorio de Github: *[jportada_boat_fact_extractor](https://github.com/portada-git/jportada_boat_fact_extractor)*. 
 
+Antes de entrar en detalle sobre la cuestión práctica de la configuración de los extractores, se dará una explicación de la biblioteca en la que se ha basado la aplicación de extracción. Se trata de *[jportada_auto_news_extractor_lib](https://github.com/portada-git/jportada_auto_news_extractor_lib)*.
+
 ## Consideraciones sobre la biblioteca _jportada_auto_news_extractor_lib_
 La aplicación *[jportada_boat_fact_extractor](https://github.com/portada-git/jportada_boat_fact_extractor)*  está basada en la biblioteca *[jportada_auto_news_extractor_lib](https://github.com/portada-git/jportada_auto_news_extractor_lib)*, la cual presenta 3 funcionalidades necesarias para realizar la extracción en el contexto del proyecto portada.
 
