@@ -1,3 +1,4 @@
+
 <div align="center">
 <h1>Configuración para la extracción de datos</h1>
 <h2>Manual para desarrolladores: Extracción de información de noticias en el contexto del proyecto portada</h2>
@@ -23,10 +24,11 @@
 		3. [Conjunto de Prompts para OpenAI](#conjunto-de-prompts-para-openai)
 		4. [Configuración de los extractores de contenido](#configuraci%C3%B3n-de-los-extractores-de-contenido)
 			1. [Configuración de un  analizador de tipo *regex*](#configuraci%C3%B3n-de-un--analizador-de-tipo-regex)
+				1. [Relación jerárquica del contenido](#relaci%C3%B3n-jer%C3%A1rquica-del-contenido)
+				2. [Configuración de cada nivel de extracción](#configuraci%C3%B3n-de-cada-nivel-de-extracci%C3%B3n)
+				3. [Ejemplo de configuración completo](#ejemplo-de-configuraci%C3%B3n-completo)
 			2. [Configuración de un  analizador de tipo *openAI*](#)
 2. [La aplicación _autoNewsExtractorDev_](#)
-
-
 
 Este manual se ha creado básicamente para ayudar a los desarrolladores del proyecto **_PorTAda_** a crear los archivos de configuración necesarios para que las aplicaciones PAPI y PAPCLI puedan extraer los datos referentes a las embarcaciones llegadas a los diferentes puertos de estudio referenciadas en los periódicos utilizados como fuentes en el contexto del proyecto portada. 
 
