@@ -4,10 +4,27 @@
 </div>
 
 # Table of Contents
-1. [Example](#example)
-2. [Example2](#example2)
-3. [Third Example](#third-example)
-4. [Fourth Example](#fourth-examplehttpwwwfourthexamplecom)
+1. [La biblioteca _jportada_auto_news_extractor_lib_](#la-biblioteca-jportada_auto_news_extractor_lib)
+	1. [Funcionalidades de *jportada_auto_news_extractor_lib*](#funcionalidades-de-jportada_auto_news_extractor_lib)
+		1. [Ensamblador de archivos digitales](#ensamblador-de-archivos-digitales)
+		2. [Cortador de los fragmentos objetivo](#cortador-de-los-fragmentos-objetivo)
+		3. [Analizador para extraer la información](#analizador-para-extraer-la-informaci%C3%B3n)
+	2. [Diseño de software basado en proxies](#dise%C3%B1o-de-software-basado-en-proxies)
+		1. [Sistema del proxy para la funcionalidad de ensamblaje de archivos](#sistema-del-proxy-para-la-funcionalidad-de-ensamblaje-de-archivos)
+		2. [Sistema del proxy para la funcionalidad de segregación de fragmentos-objetivo](#sistema-del-proxy-para-la-funcionalidad-de-segregaci%C3%B3n-de-fragmentos-objetivo)
+		3. [Sistema del proxy para la funcionalidad de analizador de contenido para la extracción de datos](#sistema-del-proxy-para-la-funcionalidad-de-analizador-de-contenido-para-la-extracci%C3%B3n-de-datos)
+		4. [Sistema del proxy para las utilidades FieldCalculator](#sistema-del-proxy-para-las-utilidades-fieldcalculator)
+	3. [Configuración](#configuraci%C3%B3n)
+		1. [Inicialización o configuración inicial](#inicializaci%C3%B3n-o-configuraci%C3%B3n-inicial)
+		2. [Conjunto de expresiones regulares](#conjunto-de-expresiones-regulares)
+			1. [Composición de expresiones regulares complejas](#composici%C3%B3n-de-expresiones-regulares-complejas)
+			2. [Directorios de búsqueda de los archivos de expresiones regulares](#directorios-de-b%C3%BAsqueda-de-los-archivos-de-expresiones-regulares)
+			3. [Expresiones regulares alternativas](#expresiones-regulares-alternativas)
+		3. [Conjunto de Prompts para OpenAI](#conjunto-de-prompts-para-openai)
+		4. [Configuración de los extractores de contenido](#configuraci%C3%B3n-de-los-extractores-de-contenido)
+			1. [Configuración de un  analizador de tipo *regex*](#configuraci%C3%B3n-de-un--analizador-de-tipo-regex)
+			2. [Configuración de un  analizador de tipo *openAI*](#)
+2. [La aplicación _autoNewsExtractorDev_](#)
 
 
 
@@ -304,6 +321,8 @@ Esta deducción responde a la estructura implícita en la distribución textual.
 
 En este caso, se necesitará más de una expresión regular para analizar y extraer toda la información contenida en la sección. Por un lado, necesitaremos, al menos,  una expresión regular que identifique los subtítulos y extraiga la bandera y por otro, una expresión regular que identifique y extraiga el resto de información para el texto que quede entre subtítulo y subtítulo. En el caso del ejemplo, vamos a ver que solamente con dos tipos de expresiones tendremos suficiente para extraer toda la información. Por tanto,  el atributo *config* de fichero JSON deberá tener dos especificaciones, una para configurar la extracción de la información de los subtítulos y otra para configurar la extracción del texto situado entre subtítulos.
 
+##### Configuración de cada nivel de extracción
+
 Para cada uno de los extractores se deberá definir en un formato de objeto JSON las siguientes características:
 
  - **approach_type**: Permite indicar el enfoque del extractor. Admite 'regex' o 'openAi'. Es necesario clarificar que la siguiente configuración es específica para 'regex' pues la correspondiente a 'openAi' se muestra en el apartado relativo a la configuración de los extractores openAi.
@@ -326,6 +345,8 @@ Para cada campo a calcular (ítem de fields_to_calculate), deberá indicarse:
  - **init_data**: Este es un dato opcional. Si aparece debe tenar formato _array_. Indicará las múltiples inicializaciones que este calculador necesita. Serán valores válidos: "configuration", "parser_id", "constants" o "extracted_data" definidos en el apartado [Sistema del proxy para las utilidades FieldCalculator](https://github.com/portada-git/developers_portada_project_documentation/blob/main/ManualDesarrolladores.md#sistema-del-proxy-para-las-utilidades-fieldcalculator).
  - **fieldParams**: Este dato es opcional. Si aparece, debe pasarse los nombres de los campos de los que se quiera obtener su valor, precedidos de _extracted_data._ o _last_extracted_data._,  según se desee el valor recien extraido o el valor obtenido de la última extracción completa. Por ejemplo si se especifica `["extracted_data.master_role", "last_extracted_data.master_role"]`se pasará al calculador especificado, el rol del responsable obtenido en el proceso de extración (supongamos 'id.') y la misma categoría, pero cuyo valor fue obtenido en la extracción de la embarcación leída justo antes de la actual (supongamos 'cap.'). 
  - **literalParams**: Este dato es opcional y corresponderá a la lista de valores literales que se desee pasar como parámetros al calculador. Se acepta cualquier valor literal i se define en formato _array_. Por ejemplo: `["La Habana"].
+
+##### Ejemplo de configuración completo
  
  Sirva de ilustración de lo descrito, el siguiente ejemplo de una configuración completa:
  ```json
@@ -591,7 +612,8 @@ Para cada campo a calcular (ítem de fields_to_calculate), deberá indicarse:
     }
 }
 ```
-                            
+
+#### Configuración de un  analizador de tipo *openAI*			    
 
 ## Aplicación _jportada_boat_fact_extractor_
 
