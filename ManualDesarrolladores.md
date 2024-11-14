@@ -29,7 +29,8 @@
 				2. [Configuración de cada nivel de extracción](#configuraci%C3%B3n-de-cada-nivel-de-extracci%C3%B3n)
 				3. [Ejemplo de configuración completo](#ejemplo-de-configuraci%C3%B3n-completo)
 			2. [Configuración de un  analizador de tipo *openAI*](#configuraci%C3%B3n-de-un--analizador-de-tipo-openai)
- 3. [La aplicación _autoNewsExtractorDev_](#)
+ 3. [Preparación de la configuración](#) 
+ 4. [La aplicación _autoNewsExtractorDev_](#)
 
 # Manual para desarrolladores
 
@@ -621,6 +622,18 @@ Para cada campo a calcular (ítem de fields_to_calculate), deberá indicarse:
 #### Configuración de un  analizador de tipo *openAI*		
 
 [==TO DO ...==]
+
+# Preparación de la configuración 
+
+Para empezar a configurar los extractores de los diferentes periódicos del _Proyecto PorTAda_ será necesario bajarse la aplicación _autoNewsExtractorDev_ en el enlace [_autoNewsExtractorDev.zip_](https://drive.google.com/file/d/1UBCOwoWMHVPY9bpfrQbXnQQh5WSmgjz4/view?usp=drive_link) y descomprimir el archivo. Esto creará el directorio "_run_autonewsextractor_dev_", dentro del cual se encontrara el archivo ejecutable (_boat_fact_extractor.jar_) y 10 scripts (5 para ejecutar bajo Windows y 5 bajo Linux/MAC) que ayudaran a realizar y probar la configuración que debéis realizar. 
+
+Una vez descomprimido el archivo _autoNewsExtractorDev.zip_ y comprobado su contenido, será necesario configurar los directorios de configuración. Para facilitar esta tarea y evitar errores, se ha creado un repositorio en _Github_ llamado [ _portada_boat_fact_extractor_config_data_](https://github.com/portada-git/portada_boat_fact_extractor_config_data) en el que se han definido los directorios básicos y los principales ficheros a usar para cada uno de los equipos del proyecto. Se ha usado un repositorio de github con los directorios y ficheros porque la configuración final de cada equipo debe subirse al servidor del proyecto.
+
+Así pues, deberéis clonar el repositorio _portada_boat_fact_extractor_config_data_ en vuestro ordenador local. Una vez clonado, moved y renombrad el repositorio local (recién clonado), con el nombre _config_, al directorio de ejecución del programa _autoNewsExtractorDev_ y que si no habéis renombrado, debería ser _run_autonewsextractor_dev_. El resultado de esta operación debería ser el que se muestra en la siguiente imagen:
+
+![Repositorio de configuración dentro del directorio de ejecución de autoNewsExtractorDev](media/directorisExecucio.png)
+
+Aseguraros que el directorio _config_ es vuestro repositorio local de _portada_boat_fact_extractor_config_data_, ya que así, se podrá sincronizar fácilmente y sin peligro los cambios que los diferentes equipos vayan realizando. 
 
 
 # La aplicación _autoNewsExtractorDev_
