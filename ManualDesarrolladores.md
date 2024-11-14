@@ -1,18 +1,24 @@
 # Configuración para la extracción de datos
 ## Manual para desarrolladores: Extracción de información de noticias en el contexto del proyecto portada
 
+# Table of Contents
+1. [Example](#example)
+2. [Example2](#example2)
+3. [Third Example](#third-example)
+4. [Fourth Example](#fourth-examplehttpwwwfourthexamplecom)
+
 Este manual se ha creado básicamente para ayudar a los desarrolladores del proyecto **_PorTAda_** a crear los archivos de configuración necesarios para que las aplicaciones PAPI y PAPCLI puedan extraer los datos referentes a las embarcaciones llegadas a los diferentes puertos de estudio referenciadas en los periódicos utilizados como fuentes en el contexto del proyecto portada. 
 
 Para facilitar la configuración de los extractores, se ha desarrollado una aplicación no integrada en PAPICLI de uso exclusivo para desarrolladores. Se puede conseguir en el enlace [autoNewsExtractor.zip](https://drive.google.com/file/d/12NaBfcW54yxIm0oAs6Oyro-BHDF1RnHN/view?usp=sharing). Dicho enlace solo contiene los ejecutables y scripts para preparar la extracción, por lo que será necesario añadir los directorios de configuración.  El código de dicha aplicación se encuentra en el siguiente repositorio de Github: *[jportada_boat_fact_extractor](https://github.com/portada-git/jportada_boat_fact_extractor)*. 
 
 Antes de entrar en detalle sobre la cuestión práctica de la configuración de los extractores, se dará una explicación de la biblioteca en la que se ha basado la aplicación de extracción. Se trata de *[jportada_auto_news_extractor_lib](https://github.com/portada-git/jportada_auto_news_extractor_lib)*.
 
-## Biblioteca _jportada_auto_news_extractor_lib_
+# Biblioteca _jportada_auto_news_extractor_lib_
 
 La biblioteca *[jportada_auto_news_extractor_lib](https://github.com/portada-git/jportada_auto_news_extractor_lib)*, es una biblioteca genérica para facilitar la creación de utilidades orientadas a la extracción de datos de fuentes textuales. Presenta una gran flexibilidad, lo que supone minimizar la creación de nuevo código. A continuación valor a presentar 3 funcionalidades que serán útiles para realizar la extracción en el contexto del proyecto portada.
 
-### Funcionalidades de *jportada_auto_news_extractor_lib*
-#### Ensamblador de archivos digitales
+## Funcionalidades de *jportada_auto_news_extractor_lib*
+### Ensamblador de archivos digitales
 
 Esta funcionalidad permite unir, en un solo archivo, los múltiples textos pertenecientes a una misma unidad informativa, que el procesador OCR haya generado a partir de los periódicos digitalizados. Aunque la biblioteca permitiría usar otras metodologías, en el proyecto **_PortAda_** se decidió usar el enfoque basado en el nombre de los archivos generados por el procesador OCR. Durante el proceso de obtención del texto a partir de las imágenes de los periódicos analizados, las imágenes se fraccionan en bloques para facilitar su ordenación y transcripción textual. En el proyecto se ha optado por nombrar cada bloque con un nombre que permita identificar la fecha, el nombre del periódico, la edición del ejemplar (mañana, tarde, ...), así como el tipo de noticia, la página y el número de bloque procesado por el OCR. 
 
@@ -20,10 +26,10 @@ Este formato nos permite determinar que todos los archivos de texto pertenecient
 
 Además, al tiempo que se realiza la unión, se consigue obtener información extra que no se encuentra en la noticia, objeto de nuestro análisis y posterior extracción. No referimos a los datos indicados en el nombre: Fecha del ejemplar, lugar de edición, nombre del periódico, edición del ejemplar, tipo de noticia y páginas de las que se realizará la extracción. Dicha información será incorporada, al resto de datos extraídos. Por ello **es importante que el nombre de los archivos sigan el patrón descrito: AAAA_MM_DD_PUE_NP_E_T_PG_BLOC.txt, donde AAAA corresponde al año de edición, MM al mes y DD al día;  PUE indica el nombre del puerto al que hace referencia la noticia a extraer (BCN, BUE, HAB, MAR); NP se refiere al nombre del periódico (DB por diario de Barcelona, DM por diario de la marina, EN por el nacional, LP por la prensa, SM por le semafore de Marseille, ...); E indica la edición del ejemplar (M por mañana, T por tarde, N por noche o U por única) la posición T define el tipo de noticia y admite los valores: E por entradas de embarcaciones, M por manifiesto de descarga o 0 si no se conoce el contenido; la posiciones PG, contendrán el número de página, con dos dígitos de manera obligatoria, y los últimos 4 dígitos (BLOC) indicarán el número del bloque del que se ha transcrito el texto. Por ejemplo, el archivo 1854_04_25_BUE_EN_U_E_08_005.txt indicaría que se trata del quinto bloque de la página 8 de las noticias referidas a las entradas de buques al puerto de Buenos Aires del periódico _El Nacional_ de la única edición del día 25 de abril de 1854.
 
-#### Cortador de los fragmentos objetivo 
+### Cortador de los fragmentos objetivo 
 Una vez unidos todos los bloques en un único cabe segregar el texto objetivo donde se encuentra la noticia o sección de la cual extraer la información del resto de texto. Esta funcionalidad de búsqueda y segregación de los fragmentos-objetivo de estudio,  Para ello, en el proyecto PortAda se usará el enfoque basado en expresiones regulares que delimiten el inicio y el final de la sección. La composición de estas expresiones regulares sigue la metodología usada por la biblioteca _jportada_auto_news_extractor_lib_ que se explicará más adelante. El objetivo de esta funcionalidad consiste en reducir las posibilidades de error en el momento de realizar la extracción, eliminando de forma previa los fragmentos de noticias y secciones ajenas a la información que se quiere extraer. De esta forma, el proceso de extracción se hará únicamente con el texto necesario, evitando así, posible ruido que pueda falsear e inducir a error de los datos extraídos.
 
-#### Analizador para extraer la información
+### Analizador para extraer la información
 La última de las funcionalidades tiene como objetivo extraer los datos contenidos en el texto de las noticias, clasificándolo en categorías predefinidas a las que llamaremos campos. Estos son:
 
 __model_version__: Indica la versión del nombre del campo model.
@@ -99,29 +105,29 @@ __ship_origin_area__: Este campo aparece únicamente en modelos cuantitativos do
 
 En este caso existirán dos enfoques metodológicos para realizar la extracción, seleccionables mediante un atributo en el fichero de configuración (ver el apartado de configuración).  Uno de ellos estará basado en expresiones regulares (compuestas también siguiendo la metodología usada por la biblioteca _jportada_auto_news_extractor_lib_ que se explicará más adelante). El otro enfoque se basará en el uso de inteligencia artificial generativa (concretamente OpenAI).  
 
-### Diseño de software basado en proxies
+## Diseño de software basado en proxies
 La biblioteca *[jportada_auto_news_extractor_lib](https://github.com/portada-git/jportada_auto_news_extractor_lib)* se ha diseñado para permitir diversos enfoques metodológicos en el tratamiento de la extracción. A fin de facilitar el desarrollo de los enfoques actuales y permitir futuras alternativas, la biblioteca dispone de un conjunto de proxies capaces de manejar, de forma transparente, múltiples enfoques que respondan a una funcionalidad determinada, organizada alrededor de una interfaz.
 
 ![diagrama UML del patron proxy](media/proxy_annotation_system.jpg)
 
 Se ha implementado 4 patrones diferentes de tipo proxy. Uno para cada funcionalidad (ensamblaje de archivos, segregación de fragmentos-objetivo y analizador de contenido) y un cuarto sistema para gestionar los llamados calculadores de campos. Al iniciarse la ejecución, cada proxy busca entre un conjunto definido de  paquetes, las classes anotadas por la anotación de marcaje asociada al proxy. Al iniciarse la ejecución, el proxy usará su anotación asociada para  encontrar todas las classes que implementen la interficie vinculada al proxy y así gestionar la delegación de las peticiones de los clientes en función de un parámetro de selección (el enfoque).
 
-#### Sistema del proxy para la funcionalidad de ensamblaje de archivos
+### Sistema del proxy para la funcionalidad de ensamblaje de archivos
 En este caso solo se ha implementado un único enfoque específico para el proyecto PortAda, aunque en un futuro podrían implementarse otros. El patrón está basado en un _Proxy_ anotado por _InformationUnitBuilderMarkerAnnotation_ que implementa la interfaz _InformationUnitBuilder_ por delegación sobre la clase _InformationUnitBuilderFromSdlFiles_ (ver diagrama).
 
 ![diagrama UML del sistema InformationBuilder](media/InformationUnitBuilderSystem.jpg)
 
-#### Sistema del proxy para la funcionalidad de segregación de fragmentos-objetivo
+### Sistema del proxy para la funcionalidad de segregación de fragmentos-objetivo
 De forma similar a la anterior, este sistema dispone de un Proxy anotado por _TargetFragmentCutterMarkerAnnotation_, implementa la interfaz _TargetFragmentCutter_ y delega en las classes _TargetFragmentCutterByRegex_ y _TargetFragmentCutterByOpenAI_tal como se muestra en el siguiente diagrama:
 
 ![diagrama UML del sistema TargetFragmentCutter](media/TargetFragmentCutterSystem.jpg)
 
-#### Sistema del proxy para la funcionalidad de analizador de contenido para la extracción de datos
+### Sistema del proxy para la funcionalidad de analizador de contenido para la extracción de datos
 En este caso, el sistema dispone de un Proxy anotado por _ProxyAutoNewsExtractorParser_, implementa la interfaz _ExtractorParser_ y delega en las classes _RegexExtractorParser_ y _OpenAiExtractorParser_ tal como se muestra a continuación:
 
 ![diagrama UML del sistema ExtractorParser](media/ContentParserForExtracting.jpg)
 
-#### Sistema del proxy para las utilidades FieldCalculator
+### Sistema del proxy para las utilidades FieldCalculator
 
 Las utilidades FieldCalculator están diseñadas para facilitar la manipulación y cálculo de campos extraídos o no,  a partir de un conjunto de datos llegados a través de la configuración y los  parámetros durante la ejecución del cálculo. El diagrama UML ayuda a entender el diseño:
 
@@ -136,12 +142,12 @@ A fin de facilitar todas las posibles inicializaciones de modo automatizado, est
 
 El método calculate, puede recibir un parámetro con un objeto, a lista que contenga todos los datos necesarios. Por ejemplo, el calculador llamado *ReplaceIdemByValueCalculator* recibe un array de cadenas de caracteres con dos posiciones, en la primera se enviará el valor actual del campo que se desea manipular en caso de que contenga la palabra* idem* o equivalente. Puesto que ello significa que el valor de eses campo, en realidad hace referencia al último valor obtenido para ese mismo campo durante la anterior extracción. Dicho valor se pasa como segunda posición del array.  La mayoría de calculadores no están diseñados para manipular directamente los campos (a excepción de los que se inicialicen con el parámetro *extracted_data* como ya se ha indicado) sino únicamente para calcular el valor de manera que por configuración se pueda asignar el valor al campo preciso. Esto permite reutilizar los calculadores genéricos en múltiples ocasiones (ver el apartado Configuracion para conocer como configurar este sistema de cálculo). 
 
-### Configuración
+## Configuración
 La biblioteca _jportada_auto_news_extractor_lib_ dispone de diversos sistemas de configuración, los cuales se complementan entre sí. El sistema se inicializa argumentos pasados desde el sistema y también mediante un fichero típico de configuración (ini, properties, ...) el cual contiene en cada línea el nombre de un atributo junto a su valor separado por ":".  Por otro lado, la biblioteca, para aquellos enfoques basados en expresiones regulares, dispone de un conjunto de carpetas y ficheros donde se pueden definir, de forma parcial, expresiones regulares que podrán aprovecharse en la composición de expresiones más complejas. A este tipo de configuración la llamaremos _conjunto de expresiones regulares_ y generalmente se ubicará en el directorio "regex", aunque existe un atributo de configuración inicial que pude asignar otra ubicación. Existe todavía un tercer sistema de configuración específico para definir la extracción. Tiene formato JSON y generalmente se encuentra en un archivo llamado _extractor_config.json_, pero de nuevo, desde la configuración inicial, puede especificarse el nombre y ruta donde se ha ubicado. 
 
 Seguidamente, describiremos con más detalles estos 3 sistemas  de configuración.
 
-#### Inicialización o configuración inicial
+### Inicialización o configuración inicial
  El sistema se inicializa mediante argumentos pasados desde el sistema y también mediante un fichero típico de configuración (ini, properties, ...) el cual contiene en cada línea el nombre de un atributo junto a su valor separado por ":".  Por defecto, la biblioteca busca un fichero llamado _init.properties_ en el directorio de ejecución o en el subdirectorio llamado _config_, pero se le puede pasar otra ubicación usando el argumento -c [RUTA_INIT_PROPERTIES] desde el sistema. Casi todos los atributos permitidos en el fichero se pueden pasar usando el sistema (consola). De esta forma se puede decidir qué argumentos se pasan desde el fichero y qué otros desde el sistema. En caso de que se pasaran argumentos repetidos por fichero y consola, estos últimos tendría siempre prioridad sobre los definidos en el fichero. Desde la consola los atributos a pasar son:
 
 **-h**, **--help** show this help message and exit
@@ -185,10 +191,10 @@ Seguidamente, describiremos con más detalles estos 3 sistemas  de configuració
 
 En el fichero de configuración se admiten todos los argumentos aceptados por consola en su versión larga. Además, dicho fichero acepta otros parámetros relativos al sistema de registro (logs).
 
-#### conjunto de expresiones regulares
+### conjunto de expresiones regulares
 A fin de poder generar expresiones regulares complejas, la biblioteca _jportada_auto_news_extractor_lib_ permite definir múltiples ficheros con expresiones regulares parciales que pueden ser usadas para componer nuevas expresiones regulares, las cuales podrían ser usadas de nuevo, recursivamente, como componentes de otras expresiones. 
 
-##### Composición de expresiones regulares complejas
+#### Composición de expresiones regulares complejas
 
 Una expresión compuesta podría ser: 
 ```
@@ -215,7 +221,7 @@ La expresión final conseguida con el ejemplo anterior sería:
 ^(.*[EA]{2,3}barca.{2,4}nes (?:(?:[|i¡l][|i¡l])|(?:[UHN]))[eoa]g[aoeu]d.. .{2,7} p[uo][eo]rt[oe].{8,25})\s+$
 ``` 
 
-##### Directorios de búsqueda de los archivos de expresiones regulares
+#### Directorios de búsqueda de los archivos de expresiones regulares
 
 Cabe tener en cuenta que la biblioteca _jportada_auto_news_extractor_lib_ dispone de un sistema de búsqueda del los archivos (.regex) con las expresiones a sustituir, bastante flexible. Estos archivos se encuentran ubicados en diversos directorios ramificados a partir de un directorio raíz de manera que forman una estructura jerárquica. 
 
@@ -225,7 +231,7 @@ Dicha jerarquía, actualmente está pensada para tener 4 niveles de profundidad 
 
 El sistema es capaz de encontrar el nombre de un archivo con extensión .regex o .options, se encuentre donde se encuentre dentro de la jerarquía definida a partir del directorio raíz. Además, la búsqueda se realiza de dentro a fuera, de manera que los más específicos se descubren antes que los más genéricos. De esta forma, aunque hubiera ficheros con nombres repetidos, el sistema encontraría primero siempre el más específico. Así, si un extractor de expresiones regulares tiene un componente que no se acaba de adaptar, puede crear otro con el mismo nombre en un nivel más profundo.
 
-##### Expresiones regulares alternativas
+#### Expresiones regulares alternativas
 
 El contenido de los ficheros .regex debe ser una expresión regular válida con dos excepciones: los componentes de sustitución que siempre tendrán el formato `{##nombre_archivo##}` y los saltos de línea, que al hacer la composición, se tomarán como  expresiones alternativas. Esto es, que un fichero conteniendo:
 
@@ -240,11 +246,11 @@ Al resolverse se construiría la expresión compleja siguiente:
 ```
 Esta "sintaxis" facilita mucho la creación de expresiones regulares muy complejas usando las propiedades de la sustitución y la búsqueda descritas en loas apartados anteriores, con una mirada más "humana", en el sentido de comprender e interpretar rápidamente las diferentes partes de la expresión compleja.
 
-#### Conjunto de Prompts para OpenAI
+### Conjunto de Prompts para OpenAI
 
 [==TO DO ...==]
 
-#### Configuración de los extractores de contenido
+### Configuración de los extractores de contenido
 
 Los extractores o analizadores de contenido para la extracción, se configurarán mediante un fichero JSON, cuya estructura permite gestionar la instanciación y ejecución  de uno a más extractores de algún enfoque válido ("regex" o "openAi") capaces de trabajar de forma coordinada con las clases de la biblioteca _jportada_auto_news_extractor_lib_ para obtener una lista con los datos extraídos de las noticias de un conjunto de archivos con el texto fruto de la transcripción OCR de las imágenes de los periódicos.
 
