@@ -237,13 +237,347 @@ Esta "sintaxis" facilita mucho la creación de expresiones regulares muy complej
 
 [==TO DO ...==]
 
-#### Configuración del extractor
+#### Configuración de los extractores de contenido
 
 Los extractores o analizadores de contenido para la extracción, se configurarán mediante un fichero JSON, cuya estructura permite gestionar la instanciación y ejecución  de uno a más extractores de algún enfoque válido ("regex" o "openAi") capaces de trabajar de forma coordinada con las clases de la biblioteca _jportada_auto_news_extractor_lib_ para obtener una lista con los datos extraídos de las noticias de un conjunto de archivos con el texto fruto de la transcripción OCR de las imágenes de los periódicos.
 
-Como ya se ha comentado, a menudo, la información a extraer puede responder a más de un patrón textual dentro de una misma noticia, sección o periódico. Ello nos obliga a poder trabajar con más de un analizador (uno para cada patrón de texto allado). Por ejemplo, en el Diario de Barcelona, en la misma sección de embarcaciones llegadas conviven dos tipos de patrones textuales, aquellos que detallan las características del viaje, de la embarcación y la carga transportada, rezando con un parón similar a "De [PUERTO_DE SALIDA] [, ESCALA[, ... [y ULTIMA_ESCALA]]] en [TIEMPO] [DIAS_HORAS], [TIPO_EMBARCACION]
+Como ya se ha comentado, a menudo, la información a extraer puede responder a más de un patrón textual dentro de una misma noticia, sección o periódico. Ello nos obliga a poder trabajar con más de un analizador (uno para cada patrón de texto allado). Por ejemplo, en el Diario de Barcelona, en la misma sección de embarcaciones llegadas conviven dos tipos de patrones textuales, aquellos que detallan las características del viaje, de la embarcación y la carga transportada, rezando con un patrón similar a "De [PUERTO_DE SALIDA] [, ESCALA[, ... [y ULTIMA_ESCALA]]] en [TIEMPO] [DIAS_HORAS], [TIPO_EMBARCACION] [NOMBRE_EMBARCACION]..." , y los que informa de las embarcaciones de cabotaje, que en lugar de detallar cada embarcación informan del número de barcos y la carga que llevan entre todos ellos. En este caso, el patrón textual es "Además [NUMERO_DE_EMBARCACIONES] buques de la costa de este principado se dirigen a puerto  con [DETALLE_DE_LA_CARGA]".  Al ser patrones tan diferentes, será necesario definirlos por separado.
+
+En el atributo llamado "_parse_model_" del fichero de configuración (*init.properties*) debe detallarse la lista de analizadores para la extracción de los diferentes patrones, indicando los nombres de estos separados por coma. El nombre es solo un identificador y puede tomar cualquier valor. La única restricción es que deben coincidir los nombres definidos en el atributo  "_parse_model_", con las claves indicadas en el fichero de configuración JSON. Imaginemos que el atributo parse_model se encuentra definido como: `parse_model=[boatdata.extractor,boatcosta.extractor]` el fichero de configuración de los analizadores deberá contener estas dos claves y cada una de ellas describirá un objeto JSON con la configuración específica:
+```json
+{
+    "boatdata.extractor": {
+		    ...
+    },
+    "boatcosta.extractor": {
+		    ...
+    }
+}   
+```
+La configuración de cada analizador de contenido para la extracción depende del enfoque que se defina, el cual, como se ha indicado, puede ser *regex* o *openAi*. 
+
+#### Configuración de un  analizador de tipo *regex*
+
+La configuración de cada analizador tiene formato de objeto JSON con los siguientes campos:
+ - **field_version**:  Indica la versión de nombres de campos usada en esta configuración. Por ejemplo: 'boat_fact-00.00.00'".
+ - **constants**: Es un objeto JSON con el conjunto de constantes (nombre de la clave y valor) necesarias para configurar este extractor o sus calculadores. Por ejemplo: 
+```json
+{
+	"arrival_port": "Barcelona", 
+	"puertos_por_id":{
+		"BCN":"Barcelona", 
+		"BUE":"Buenos Aires", 
+		"HAV":"La Habana",
+		"MAR":"Marsella"
+	}
+}
+```
+&nbsp; &nbsp; &nbsp; &nbsp; Como puede verse en el ejemplo, cada constante contener datos simples o  datos compuestos.
+ - **config**: Este atributo tiene formato de _array_ y define múltiples niveles de extracción.
+
+Veamos ahora qué significa definir múltiples niveles de extracción y como especificarlos. 
+
+##### Relación jerárquica del contenido
+
+En muchas ocasiones la información escrita mantiene cierta relación jerárquica. Por ejemplo, en la imagen siguiente se puede ver que la información del título hace referencia a todas las entradas de la sección. Así podemos afirmar que todas las entradas de las embarcaciones siguientes se produjeron el día anterior a la fecha de publicación del diario (ayer). Por otro lado, también podemos ver que bajo el subtítulo de mercantes españolas (resaltado en amarillo) se informan de un conjunto de entradas, todas ellas embarcaciones españolas, aunque en el texto no aparezca esa información. De hecho, deducimos que todas las embarcaciones resaltadas en amarillo son españolas, la resaltada en naranja es oldenburguesa y las de color azul inglesas.
+
+![Ejemplo de jerarquía en texto escrito](media/mostraJerarquiaText.png)
+
+Esta deducción responde a la estructura implícita en la distribución textual. Así podemos concluir que desde el primer subtítulo ("mercantes españolas" en el ejemplo) hasta el siguiente ("id. oldenburguesa") las embarcaciones comparten la bandera que se extraiga del subtítulo. Las que se encuentran  entre el segundo y tercer subtitulo, en cambio, comparten la bandera extraída del subtítulo ("oldenburguesas") y las que se encuentran debajo del tercer subtítulo hasta el final deberán ser "inglesas".
+
+En este caso, se necesitará más de una expresión regular para analizar y extraer toda la información contenida en la sección. Por un lado, necesitaremos, al menos,  una expresión regular que identifique los subtítulos y extraiga la bandera y por otro, una expresión regular que identifique y extraiga el resto de información para el texto que quede entre subtítulo y subtítulo. En el caso del ejemplo, vamos a ver que solamente con dos tipos de expresiones tendremos suficiente para extraer toda la información. Por tanto,  el atributo *config* de fichero JSON deberá tener dos especificaciones, una para configurar la extracción de la información de los subtítulos y otra para configurar la extracción del texto situado entre subtítulos.
+
+Para cada uno de los extractores se deberá definir en un formato de objeto JSON las siguientes características:
+
+ - **approach_type**: Permite indicar el enfoque del extractor. Admite 'regex' o 'openAi'. Es necesario clarificar que la siguiente configuración es específica para 'regex' pues la correspondiente a 'openAi' se muestra en el apartado relativo a la configuración de los extractores openAi.
+ - **configuration**: es un objeto que contendrá la especificación siguiente: 
+	 - **main_regex**: Nombre del archivo '.regex' inicial que originará toda la expresión de extracción final.
+	 - **max_groups**: Este es un dato numérico e indica el número máximo de grupos que la expresión manejara. Como mínimo habría que indicar el número de campos que esta expresión obtiene, aunque, si la expresión principal necesita varias alternativas, el valor será un múltiplo del número de campos a extraer (número de campos * número de alternativas).
+	 - **fields_to_extract**:  _Array_ con la especificación de la extracción de cada campo en el mismo orden que aparezcan en el texto
+	 - **fields_to_calculate**: _Array_ con la especificación del cálculo a realizar de aquellos campos en que sea necesario.
+
+Para cada campo a extraer (ítem de fields_to_extract), deberá indicarse:
+ - **key**: Nombre de la categoría o campo que se dará al valor extraído en el grupo de la exterior regular correspondiente a la misma posición que esta definición tenga en el _array_ 'fields_to_extract'.
+ - **temporary_field**: Indica si el nombre definido en 'key' será temporal o se corresponderá con alguno definidor en la versión del modelo de extracción identificado por 'field_version'.
+ - **default_value**: Valor que queremos darle al campo en caso de que la expresión regular no sea capaz de identificar su valor. Este es importante para dar un valor específico en aquellos campos que se utilicen para calcular otros, a fin de evitar problemas en el procesamiento del cálculo, pero también es importante para asignar un valor que permita distinguir los campos no encontrados de los encontrados. Por ejemplo, "???" permitiría distinguir de un solo vistazo los campos encontrados de los no encontrados.
+ - **copy_last_value**: Este atributo necesita un valor booleano (true/false) y permite reducir el número de extractores a añadir en 'config'. Un valor de true, indica que su valor se copiará a la siguiente extracción encontrada por la  expresión regular. Así, la información perteneciente al título principal, puede irse copiando al resto de su misma categoría sin necesidad de establecer  un extractor para la categoría superior.
+
+Para cada campo a calcular (ítem de fields_to_calculate), deberá indicarse:
+ - **calculator**: nombre que identifica el calculador para que el proxy pueda encontrarlo.
+ - **key**:  nombre del campo donde volcará el valor calculado por este calculador. 
+ - **temporary_field**: Indica lo mismo que su homónimo de "_ fields_to_extract_". En caso de que ya se haya definido anteriormente, no será necesario repetir aquí la información.
+ - **init_data**: Este es un dato opcional. Si aparece debe tenar formato _array_. Indicará las múltiples inicializaciones que este calculador necesita. Serán valores válidos: "configuration", "parser_id", "constants" o "extracted_data" definidos en el apartado [Sistema del proxy para las utilidades FieldCalculator](https://github.com/portada-git/developers_portada_project_documentation/blob/main/ManualDesarrolladores.md#sistema-del-proxy-para-las-utilidades-fieldcalculator).
+ - **fieldParams**: Este dato es opcional. Si aparece, debe pasarse los nombres de los campos de los que se quiera obtener su valor, precedidos de _extracted_data._ o _last_extracted_data._,  según se desee el valor recien extraido o el valor obtenido de la última extracción completa. Por ejemplo si se especifica `["extracted_data.master_role", "last_extracted_data.master_role"]`se pasará al calculador especificado, el rol del responsable obtenido en el proceso de extración (supongamos 'id.') y la misma categoría, pero cuyo valor fue obtenido en la extracción de la embarcación leída justo antes de la actual (supongamos 'cap.'). 
+ - **literalParams**: Este dato es opcional y corresponderá a la lista de valores literales que se desee pasar como parámetros al calculador. Se acepta cualquier valor literal i se define en formato _array_. Por ejemplo: `["La Habana"].
+ 
+ Sirva de ilustración de lo descrito, el siguiente ejemplo de una configuración completa:
+ ```json
+ {
+    "boatdata.extractor": {
+        "field_version": "boat_fact-00.00.00",
+        "constants": {"arrival_port": "Barcelona"},
+        "config": [
+            {
+                "approach_type": "regex",
+                "configuration": {
+                    "max_groups": 15,
+                    "fields_to_extract": [
+                        {
+                            "temporary_field": true,
+                            "default_value": "y",
+                            "copy_last_value": true,
+                            "key": "time_of_arrival"
+                        },
+                        {
+                            "temporary_field": true,
+                            "default_value": "mercante",
+                            "copy_last_value": true,
+                            "key": "purposeType"
+                        },
+                        {
+                            "default_value": "????",
+                            "copy_last_value": false,
+                            "key": "ship_flag"
+                        }
+                    ],
+                    "fields_to_calculate": [
+                        {
+                            "calculator": "TimeOfArrivalRelativeToPublicationCalculator",
+                            "temporary_field": true,
+                            "init_data": [
+                                "configuration",
+                                "parser_id"
+                            ],
+                            "fieldParams": ["extracted_data.time_of_arrival"],
+                            "key": "time_of_arrival"
+                        },
+                        {
+                            "calculator": "ElapsedTimeFromArrivalToPublicationCalculator",
+                            "temporary_field": true,
+                            "fieldParams": ["extracted_data.time_of_arrival"],
+                            "key": "elapsed_days_from_arrival"
+                        }
+                    ],
+                    "main_regex": "flag"
+                }
+            },
+            {
+                "approach_type": "regex",
+                "configuration": {
+                    "max_groups": 10,
+                    "fields_to_extract": [
+                        {
+                            "default_value": "????",
+                            "copy_last_value": false,
+                            "key": "ship_departure_port"
+                        },
+                        {
+                            "default_value": "??",
+                            "copy_last_value": false,
+                            "key": "ship_travel_time"
+                        },
+                        {
+                            "default_value": "?",
+                            "copy_last_value": true,
+                            "key": "ship_travel_time_unit"
+                        },
+                        {
+                            "default_value": "????",
+                            "copy_last_value": false,
+                            "key": "ship_type"
+                        },
+                        {
+                            "default_value": "????",
+                            "copy_last_value": false,
+                            "key": "ship_name"
+                        },
+                        {
+                            "default_value": "????",
+                            "copy_last_value": false,
+                            "key": "ship_tons"
+                        },
+                        {
+                            "temporary_field": true,
+                            "default_value": "t.",
+                            "copy_last_value": false,
+                            "key": "ship_tons_unit"
+                        },
+                        {
+                            "default_value": "????",
+                            "copy_last_value": false,
+                            "key": "ship_master_role"
+                        },
+                        {
+                            "default_value": "????",
+                            "copy_last_value": false,
+                            "key": "ship_master_name"
+                        },
+                        {
+                            "default_value": "????",
+                            "copy_last_value": false,
+                            "key": "ship_cargo_list"
+                        }
+                    ],
+                    "fields_to_calculate": [
+                        {
+                            "calculator": "DataFromConstantCalculator",
+                            "init_data": ["constants"],
+                            "key": "ship_arrival_port",
+                            "literalParams": ["arrival_port"]
+                        },
+                        {
+                            "calculator": "PortOfCallsFromOriginPortCalculator",
+                            "init_data": [
+                                "configuration",
+                                "parser_id",
+                                "extracted_data"
+                            ],
+                            "key": "ship_port_of_call_list",
+                            "literalParams": ["ship_departure_port"]
+                        },
+                        {
+                            "calculator": "ReplaceIdemByValueCalculator",
+                            "init_data": [
+                                "configuration",
+                                "parser_id"
+                            ],
+                            "fieldParams": [
+                                "extracted_data.ship_travel_time",
+                                "last_extracted_data.ship_travel_time"
+                            ],
+                            "key": "ship_travel_time"
+                        },
+                        {
+                            "calculator": "ReplaceIdemByValueCalculator",
+                            "init_data": [
+                                "configuration",
+                                "parser_id"
+                            ],
+                            "fieldParams": [
+                                "extracted_data.ship_travel_time_unit",
+                                "last_extracted_data.ship_travel_time_unit"
+                            ],
+                            "key": "ship_travel_time_unit"
+                        },
+                        {
+                            "calculator": "ShipArrivalDateCalculator",
+                            "fieldParams": [
+                                "extracted_data.elapsed_days_from_arrival",
+                                "extracted_data.publication_date"
+                            ],
+                            "key": "ship_arrival_date"
+                        },
+                        {
+                            "calculator": "ShipDepartureDateCalculator",
+                            "fieldParams": [
+                                "extracted_data.ship_arrival_date",
+                                "extracted_data.ship_travel_time",
+                                "extracted_data.ship_travel_time_unit"
+                            ],
+                            "key": "ship_departure_date"
+                        }
+                    ],
+                    "main_regex": "boat_fact"
+                }
+            }
+        ]
+    },
+    "boatcosta.extractor": {
+        "field_version": "boat_fact-00.00.00",
+        "constants": {"arrival_port": "Barcelona"},
+        "config": [
+            {
+                "approach_type": "regex",
+                "configuration": {
+                    "max_groups": 15,
+                    "fields_to_extract": [
+                        {
+                            "temporary_field": true,
+                            "default_value": "y",
+                            "copy_last_value": true,
+                            "key": "time_of_arrival"
+                        },
+                        {
+                            "temporary_field": true,
+                            "default_value": "mercante",
+                            "copy_last_value": true,
+                            "key": "purposeType"
+                        },
+                        {
+                            "default_value": "????",
+                            "copy_last_value": false,
+                            "key": "ship_flag"
+                        }
+                    ],
+                    "fields_to_calculate": [
+                        {
+                            "calculator": "TimeOfArrivalRelativeToPublicationCalculator",
+                            "temporary_field": true,
+                            "init_data": [
+                                "configuration",
+                                "parser_id"
+                            ],
+                            "fieldParams": ["extracted_data.time_of_arrival"],
+                            "key": "time_of_arrival"
+                        },
+                        {
+                            "calculator": "ElapsedTimeFromArrivalToPublicationCalculator",
+                            "temporary_field": true,
+                            "fieldParams": ["extracted_data.time_of_arrival"],
+                            "key": "elapsed_days_from_arrival"
+                        }
+                    ],
+                    "main_regex": "flag"
+                }
+            },
+            {
+                "approach_type": "regex",
+                "configuration": {
+                    "max_groups": 9,
+                    "fields_to_extract": [
+                        {
+                            "default_value": "??",
+                            "copy_last_value": false,
+                            "key": "ship_amount"
+                        },
+                        {
+                            "default_value": "??",
+                            "copy_last_value": false,
+                            "key": "ship_origin_area"
+                        },
+                        {
+                            "default_value": "????",
+                            "copy_last_value": true,
+                            "key": "ship_cargo_list"
+                        }
+                    ],
+                    "fields_to_calculate": [
+                        {
+                            "calculator": "DataFromConstantCalculator",
+                            "init_data": ["constants"],
+                            "key": "ship_arrival_port",
+                            "literalParams": ["arrival_port"]
+                        },
+                        {
+                            "calculator": "ShipArrivalDateCalculator",
+                            "fieldParams": [
+                                "extracted_data.elapsed_days_from_arrival",
+                                "extracted_data.publication_date"
+                            ],
+                            "key": "ship_arrival_date"
+                        }
+                    ],
+                    "main_regex": "unknown_boat_fact"
+                }
+            }
+        ]
+    }
+}
+```
+                            
 
 ## Aplicación _jportada_boat_fact_extractor_
 
 
 ## Repositorio de configuración _portada_boat_fact_extractor_config_data_
+
