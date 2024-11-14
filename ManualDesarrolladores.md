@@ -28,7 +28,7 @@
 				1. [Relación jerárquica del contenido](#relaci%C3%B3n-jer%C3%A1rquica-del-contenido)
 				2. [Configuración de cada nivel de extracción](#configuraci%C3%B3n-de-cada-nivel-de-extracci%C3%B3n)
 				3. [Ejemplo de configuración completo](#ejemplo-de-configuraci%C3%B3n-completo)
-			2. [Configuración de un  analizador de tipo *openAI*](#)
+			2. [Configuración de un  analizador de tipo *openAI*](#configuraci%C3%B3n-de-un--analizador-de-tipo-openai)
  3. [La aplicación _autoNewsExtractorDev_](#)
 
 # Manual para desarrolladores
