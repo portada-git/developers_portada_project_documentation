@@ -635,6 +635,16 @@ Así pues, deberéis clonar el repositorio _portada_boat_fact_extractor_config_d
 
 Aseguraros que el directorio _config_ es vuestro repositorio local de _portada_boat_fact_extractor_config_data_, ya que así, se podrá sincronizar fácilmente y sin peligro los cambios que los diferentes equipos vayan realizando. 
 
-
 # La aplicación _autoNewsExtractorDev_
+
+La aplicación _autoNewsExtractorDev_ no tiene versión gráfica. Debe usarse desde la consola del sistema ejecutando cada un de los scripts, o directamente el ejecutable si la extensión _jar _ la tenéis asociada a la máquina virtual JAVA. El .jar esta compilado para ser ejecutado por la versión 11 o superior de la máquina virtual. Si disponéis de una máquina virtual de inferior versión actualizadla.
+
+Los scripts que encontraréis en el directorio de instalación (_run_autonewsextractor_dev_) de la aplicación son:
+ - *BoatFactInfoUnitJoinTest.run* / *BoatFactInfoUnitJoinTest.bat*. Este script permite configurar y testear la funcionalidad de "ensamblaje de los archivos digitales de una misma unidad informativa". Para hacer el test se necesitan diversos archivos de varias unidades informativas, algunas de ellas compuestas por más de un archivo.
+ - *BoatFactCutterTest.run* / *BoatFactCutterTest.bat*. Este script se puede usar para configurar y testear la funcionalidad de "recorte de los fragmentos-objetivo". Para probar será necesario configurar una expresión regular para detectar el inicio del fragmento y otra para detectar el final. Además, se necesitarán archivos de texto ya ensamblados conteniendo el fragmento-objetivo (las entradas de barcos y manifiestos) además de otros textos. Este proceso es independiente del anterior. Pueden usarse archivos arreglados manualmente o los devueltos por la funcionalidad de ensamblaje. 
+ - BoatFactExtractTest
+ - 
+
+Los archivos de texto para realizar las pruebas deberán contener las noticias procesadas de manera que cada párrafo se encuentre escrito en una única línea. Los párrafos, títulos, cabeceras, números de página, etc. se encontrarán separados por un único salto de línea. 
+
 
