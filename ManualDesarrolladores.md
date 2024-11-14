@@ -1,11 +1,12 @@
-
 <div align="center">
 <h1>Configuración para la extracción de datos</h1>
 <h2>Manual para desarrolladores: Extracción de información de noticias en el contexto del proyecto portada</h2>
 </div>
 
 # Table of Contents
-1. [La biblioteca _jportada_auto_news_extractor_lib_](#la-biblioteca-jportada_auto_news_extractor_lib)
+
+ 1. [Manual para desarrolladores](#manual-para-desarrolladores)
+ 2. [La biblioteca _jportada_auto_news_extractor_lib_](#la-biblioteca-jportada_auto_news_extractor_lib)
 	1. [Funcionalidades de *jportada_auto_news_extractor_lib*](#funcionalidades-de-jportada_auto_news_extractor_lib)
 		1. [Ensamblador de archivos digitales](#ensamblador-de-archivos-digitales)
 		2. [Cortador de los fragmentos objetivo](#cortador-de-los-fragmentos-objetivo)
@@ -28,7 +29,7 @@
 				2. [Configuración de cada nivel de extracción](#configuraci%C3%B3n-de-cada-nivel-de-extracci%C3%B3n)
 				3. [Ejemplo de configuración completo](#ejemplo-de-configuraci%C3%B3n-completo)
 			2. [Configuración de un  analizador de tipo *openAI*](#)
-2. [La aplicación _autoNewsExtractorDev_](#)
+ 3. [La aplicación _autoNewsExtractorDev_](#)
 
 # Manual para desarrolladores
 
