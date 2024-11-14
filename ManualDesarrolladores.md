@@ -1,5 +1,7 @@
-# Configuración para la extracción de datos
-## Manual para desarrolladores: Extracción de información de noticias en el contexto del proyecto portada
+<div align="center">
+<h1>Configuración para la extracción de datos</h1>
+<h2>Manual para desarrolladores: Extracción de información de noticias en el contexto del proyecto portada</h2>
+</div>
 
 # Table of Contents
 1. [Example](#example)
@@ -7,13 +9,15 @@
 3. [Third Example](#third-example)
 4. [Fourth Example](#fourth-examplehttpwwwfourthexamplecom)
 
+
+
 Este manual se ha creado básicamente para ayudar a los desarrolladores del proyecto **_PorTAda_** a crear los archivos de configuración necesarios para que las aplicaciones PAPI y PAPCLI puedan extraer los datos referentes a las embarcaciones llegadas a los diferentes puertos de estudio referenciadas en los periódicos utilizados como fuentes en el contexto del proyecto portada. 
 
 Para facilitar la configuración de los extractores, se ha desarrollado una aplicación no integrada en PAPICLI de uso exclusivo para desarrolladores. Se puede conseguir en el enlace [autoNewsExtractor.zip](https://drive.google.com/file/d/12NaBfcW54yxIm0oAs6Oyro-BHDF1RnHN/view?usp=sharing). Dicho enlace solo contiene los ejecutables y scripts para preparar la extracción, por lo que será necesario añadir los directorios de configuración.  El código de dicha aplicación se encuentra en el siguiente repositorio de Github: *[jportada_boat_fact_extractor](https://github.com/portada-git/jportada_boat_fact_extractor)*. 
 
 Antes de entrar en detalle sobre la cuestión práctica de la configuración de los extractores, se dará una explicación de la biblioteca en la que se ha basado la aplicación de extracción. Se trata de *[jportada_auto_news_extractor_lib](https://github.com/portada-git/jportada_auto_news_extractor_lib)*.
 
-# Biblioteca _jportada_auto_news_extractor_lib_
+# La Biblioteca _jportada_auto_news_extractor_lib_
 
 La biblioteca *[jportada_auto_news_extractor_lib](https://github.com/portada-git/jportada_auto_news_extractor_lib)*, es una biblioteca genérica para facilitar la creación de utilidades orientadas a la extracción de datos de fuentes textuales. Presenta una gran flexibilidad, lo que supone minimizar la creación de nuevo código. A continuación valor a presentar 3 funcionalidades que serán útiles para realizar la extracción en el contexto del proyecto portada.
 
