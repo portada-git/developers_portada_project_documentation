@@ -659,19 +659,31 @@ Ejemplo de ejecución:
 
 ## Configuración y prueba de la utilidad _BoatFactCutterTest_
 
-Esta utilidad necesita crear al menos dos ficheros con expresiones regulares. Dependiendo de los periódicos  se podrán necesitar 4. El objetivo de estas expresiones regulares consiste en detectar cuál es el inicio y el final del fragmento-objetivo de manera que se pueda dividir todo el texto de un periódico a tratar aislando el fragmento de interés y eliminando el resto. 
+Esta utilidad necesita crear al menos dos ficheros con expresiones regulares. Dependiendo de los periódicos  se podrán necesitar 4. El objetivo de estas expresiones regulares consiste en detectar cuál es el inicio y el final del fragmento-objetivo de manera que se pueda dividir todo el texto de un periódico a tratar, aislando el fragmento de interés y eliminando el resto. 
 
-Los ficheros conteniendo las expresiones regulares se ubicarán en el directorio "config/regex" y seguirán la lógica descrita en el apartado [Conjunto de expresiones regulares](#conjunto-de-expresiones-regulares).  
+Una expresión regular debe detectar el inicio del fragmento. Con ello se eliminará todo el texto desde el comienzo hasta donde se ha detectado la parte inicial del fragmento. 
 
-### Detector del fragmento inicial
+Una segunda expresión regular,  detectará donde puede acabar el texto y eliminará el texto que abarque desde el elemento detectado hasta el final de todo el texto.
+
+Así, el fragmento resultante será exclusivamente el fragmento de interés.
+
+Los ficheros conteniendo las expresiones regulares se ubicarán como parte del sistema _regex_ y seguirán la lógica descrita en el apartado [Conjunto de expresiones regulares](#conjunto-de-expresiones-regulares).  
+
+### Detector del inicio del fragmento
 
 Deberá responder al nombre de "fragment_initial_detector" y al ser la expresión generadora necesitará de la extensión .regex, con la expresión deseada, y también la extensión .options, con las opciones de procesamiento activas. Esta expresión deberá dividir el texto del fichero en  3 grupos:
  1. El primer grupo contendría el texto desde el inicio hasta justo antes, donde empieza el fragmento de interés.
  2. El segundo grupo contendrá una parte del texto de interés usada para detectar el inicio del fragmento, por ejemplo el título de la sección, algún subtítulo, etc.
  3. El tercer grupo contendrá el texto que vaya desde el final del fragmento de detección hasta el final del fichero.
  
- Veamos un ejemplo. En el Diario de Barcelona. En general la sección relativa a las embarcaciones entradas se encuantra dentro de una sección titulada "SANIDAD DEL PUERTO". A este título le sigue la informació relativa al momento en que se produjo la entrada y acto seguido comienza a enunciar las banderas con su lista de embarcaciones. Parece que el título SANIDAD DEL PUERTO puede ser un buen candidato para detectar el inicio de nuestro fragmento de interés. Dicho título no nos resulta útil durante la extracción, por lo que lo ubicaremos dentro del primer grupo (el que se debe descartar). En cambio, tanto la referencia a las embarcaciones llegadas en el día de ayer|hoy|anteayer|..., sí nos resulta útil durante la extracción, para poder calcular la fecha de llegada, ya que este dato no aparece explícitamente en la noticia. Deberemos, por tanto, ubicarlo en el segundo grupo. E el tercer grupo ubicaremos el resto del texto hasta el final del archivo. Veamos.
-Una noticia tipo seria:
+ Veamos un ejemplo. En el Diario de Barcelona, en general, la sección relativa a las embarcaciones entradas se encuentra bastante bien señalada. Muchas veces encontramos la lista de entradas bajo el título y subtítulo:
+ 
+	SANIDAD DEL PUERTO
+	Embarcaciones llegadas a puerto [DIA_DE_LLEDADA_RELATIVO] 
+
+Un rápido vistazo a las imágenes y sus transcripciones nos permite ver que la frase "Embarcaciones llegadas ...", se encuentra, normalmente, escrita en cursiva. La mayoría de  procesadores OCR presentan una menor calidad con las letras cursivas, por lo que usar solamente el subtítulo no nos parece buena idea. Por contra, la calidad de las letras mayúsculas suele ser algo mayor que las minúsculas. Así pues decidimos usar el título como discriminador.  Dicho título no nos resulta útil durante la extracción, por lo que lo ubicaremos dentro del primer grupo (el que se debe descartar). En cambio, tanto la referencia a las embarcaciones llegadas en el día de ayer|hoy|anteayer|..., sí nos resulta útil durante la extracción, para poder calcular la fecha de llegada, ya que este dato no aparece explícitamente en la noticia. Deberemos, por tanto, ubicarlo en el segundo grupo. En el tercer grupo ubicaremos el resto del texto hasta el final del archivo. Veamos.
+
+Una noticia tipo sería:
 
 	PARTE ECONOMICA.
 	AVISOS CASAS DE HUÉSPEDES.
@@ -690,6 +702,59 @@ Una noticia tipo seria:
 	De Marsella en 21 horas vapor Elba, de 210 t., c. S. Gabriel , con 69,000 francos á los señores Vidal y Cuadras hermanos, 83,000 id. á los señores Girona hermanos, Clavé y compañía , 23,000 id. D. J. M. Serra, 21,900 id. á los señores Serra y Parladé, 13.000 id. á D. B. Roca y Cortada, 15.000 id. á los señores Staguo, Torrens y compañia, 1500 id. á D. 1. Domenech, 3 cajas sangnijuclas á don B. Solá y Amat, otros efertos para esta, y 103 baltos de varios géneros de tránsito y 30 pasajeros, consignado á los señores Martorell y Bosill.
 	Despachadas el 30 de diciembre.
 	Bergantin español Wifredo, c. D. J. Ferrer, para Valparaiso con vino, pimenton y bacalao. ...
+
+Nuestra propuesta de expresión regular inicial sería:
+````
+^(.*?\nSANIDAD DEL PUERTO)\n(.*?)\n(.*)$
+````
+Es decir, Todo el texto desde el inicio hasta 'SANIDAD DEL PUERTO' cuando esta frase se encuentra en mayúsculas después de un salto de línea (ya que es un título), se encierra en un primer grupo. La siguiente línea (correspondiente al subtítulo) la capturaremos como grupo 2, y el resto de texto hasta el final del texto, será capturado como grupo 3.
+
+Para que la expresión regular no se analice línea a línea, será necesario indicarlo con las opciones  `gsuU` (análisis global -g-, considerando todo el texto como un todo -s- y forzando la aceptación de caracteres unicode).
+
+Al probar esta expresión nos damos cuenta de que, el título, que en las imágenes se encuentra centrado, a veces debido a la transparencia, en las transcripciones pueden aparecer cierto ruido a izquierda y derecha justo antes y después de los saltos de línea. También vemos que, a veces, en el título faltan letras o están mal transcritas. Y por último, nos damos cuenta de que, en ocasiones, el subtítulo, se transcribe en la misma línea que el título. Decidimos cambiar la expresión por: `^(.*?{##sanidad_del_puerto##})(.*?)\n(.*)$` donde *sanidad_del_puerto* se va a sustituir por: `\n[\{| ]{0,3}[S5].{3,5}[DO0][A4][DO0] ?[DO0]E[Ll\[\|] ?.{3,5}[RP][TY][O0]\W*\s*`
+
+Con ello reducimos la detección del título a la mínima expresión reconocible, además añadimos caracteres ruido a izquierda y derecha. El funcionamiento ahora es mucho más eficiente. 
+
+Antes de dar por terminado el detector inicial, observamos que en algunos períodos, el título SANIDAD DEL PUERTO, desaparece de la sección y solo podemos reconocer "_ Embarcaciones llegadas ..._". Decidimos mantener la expresión encontrada, pero añadir una alternativa con el subtítulo. De esta forma, donde exista el título, se aplicará el discriminador primero y donde no exista el alternativo.
+
+La expresión final que resulta eficiente en prácticamente todos los casos probados, es:
+```
+^(.*?{##sanidad_del_puerto##})(.*?)\n(.*)$
+^(.*?\n)((?:[\{| ]{0,3}(?:{##embarcaciones##})\s+(?:(?:{##llegadas##})|(?:.*{##puerto##}))\s+[^\n]*)\s?{##mercantes##} *\w{3,}[s5]?[\W\s]+)(.*)$
+```
+Para sortear las posibles trascripciones de baja calidad debido a la letra cursiva, en lugar de forzar toda la frase literal, la reducimos, simplificando su contenido, pero forzando que la frase candidata vaya seguida de una palabra similar a _mercantes_. Podéis consultar en el directorio _regex_ los ficheros con los valores de sustitución.
+
+Es importante fijarse que cuando usamos alternativas en la misma expresión principal que generará toda la expresión final, debemos asegurarnos que cada alternativa contenga exactamente los 3 grupos, ya que si en una de ellas pusiéramos menos (o más) grupos de los previstos, la detección no funcionaria.
+
+### Detector del final del fragmento
+En este detector se procesa solamente el texto obtenido en el grupo 3 de la fase anterior, la de detección del inicio del fragmento. Es decir, el que incluye parte del texto de interés junto con el resto del texto existente entre las embarcaciones llegadas y el final del ejemplar analizado.
+
+En este caso, la expresión regular dividirá el texto analizado en dos grupos. En el grupo 1 quedará el fragmento con el texto de las embarcaciones entradas (que deberá mantenerse) y en el grupo 2, el texto restante (que deberá ser eliminado).
+
+La lógica de construcción de la expresión, es similar a la anterior y se define mediante el mecanismo de composición de la expresión *regex* descrito en el apartado [Conjunto de expresiones regulares](#conjunto-de-expresiones-regulares).  
+
+El nombre del fichero contendor de la expresión principal también tiene un nombre fijo: _fragment_end_detector_ y siguendo las consideraciones _regex_ de nuestra aplicación deberá haber dos archivos con el mismo nombre (con la extensión _.regex_ y con la extensión _.options_). En este caso las opciones también deberán tratar el texto como un todo y el fichero de options contendrá `gsuU`.
+
+Un estudio preliminar de una muestra de ejemplares nos indica que la lista de embarcaciones llegadas se acaba a menudo, cuando se inicia la siguiente sección y, por tanto, aparece un título en mayúsculas. Sin embargo, hay excepciones que, por su importante número, deberemos considerar. A veces, la lista acaba en la misma sección de SANIDAD DEL PUERTO,  pero haciendo referencia  a las embarcaciones despachadas en un día concreto. La frase que suele comenzar el bloque de embarcaciones despachadas es "Despachadas el [DIA_Y_MES]". Sin embargo, en ocasiones  puede poner "el buque ... despachado el ...". Por contra, existen también, no pocos casos en los que no aparece la información de  los buques despachados. En la mayoría de estos casos, la lista termina al iniciar otra sección con un título en mayúsculas, pero existe un número reducido en el que la sección correspondiente a "Correo de Madrid...", recibido o emitido por el gobierno, se encuentra transcrito en minúsculas.
+
+Con todo, decidimos aplicar una expresión con múltiples alternativas, en esta ocasión aplicamos una técnica diferente que nos evita la repetición de grupos en cada alternativa. La técnica usada consiste separar las alternativas en un fichero de sustitución de manera que el _regex_ principal contenga una única línea (alternativa única). Veamos:
+
+```
+(^.*?)({##end_detector_body##}\W*\n.*+$)
+```
+Usando esta técnica, las alternativas situadas en el fichero _end_detector_body_ quedan dentro del paréntesis del grupo y no es necesario definir los grupos en cada alternativa.
+
+El contenido del fichero _end_detector_body_ sería:
+```
+(?:\s+D[eo][sS5g?][pq].{2,3}h.d.[sS5g?]? .{1,3} {##ocr_digit_no_blanc##}{1,2} .*)
+(?:\s+{##boat_fact_vessel##} d[eo][sS5g?][pq].{2,3}h.d.[sS5g?]? .{1,3} {##ocr_digit_no_blanc##}{1,2} .*)
+(?:\s+C[eao](?:(?:rr)|(?:m))[aoe][oeo] de Ma.{2,5}d d.. d.a {##ocr_digit_no_blanc##}{1,2} d. .* d. {##ocr_digit_no_blanc##}{2,4})
+(?:\s+[A-Z ]{3,})
+```
+Las 4 alternativas comentadas anteriormente, y probadas para que resulten el máximo de flexibles y eficientes, a fin de que coja prácticamente todos los casos si equivocación.  
+
+
+
 
 
 
