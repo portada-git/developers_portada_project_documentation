@@ -753,8 +753,32 @@ El contenido del fichero _end_detector_body_ sería:
 ```
 Las 4 alternativas comentadas anteriormente, y probadas para que resulten el máximo de flexibles y eficientes, a fin de que coja prácticamente todos los casos si equivocación.  
 
+### Ejecución y prueba de la utilidad 
 
+Una vez creados los ficheros para la composición de  las expresiones regulares de detección del inicio u el final de fragmento-objetivo, debemos probar su funcionamiento con la ejecución de la utilidad _BoatFactCutterTest_. Esta utilidad, además de los ficheros del sistema _regex_ necesitará también del fichero de configuración inicial (_init.properties_) y de un conjunto de argumentos mínimos que se le pasarán al script _BoatFactCutterTest.[run|bat]_ desde la consola.
 
+Los argumentos necesarios serán:
+- **-c**: (configuración). Este parámetro indicará el nombre y ubicación del fichero de configuración inicial. Por ejemplo: `-c config/conf_db/init.properties`
+- **-d**: (directorio de datos). Es el parámetro que debe contener la ruta del directorio donde se encuentran los ficheros de texto a tratar. Ejemplo: `-d data_db`
+- **-o**: (output). Indica la ruta del directorio de salida donde se desea escribir los ficheros con los fragmentos segregados resultantes de cada fichero leído desde el directorio de datos.
+
+Para esta utilidad, el fichero de inicialización debe contener al menos los siguientes atributos y valores:
+- **target_fragment_breaker_proxy_packages_to_search**=org.elsquatrecaps.autonewsextractor.targetfragmentbreaker.cutter (lista de paquetes donde buscar los diferentes enfoques de este tipo de classes).
+- **file_extension**=txt
+- **fragment_breaker_approach**=regex
+- **regexBasePath**=config/regex
+- **fact_model**=boatfacts (debe aparecer como directorio del sistema _regex_  justo por debajo de la raíz (_regexBasepath_).
+- **newspaper**=lp ( o db, o sm, o dm, ..., representa el identificador del periódico y debe aparecer como directorio del sistema _regex_  en el siguiente nivel que el _fact_model_ - segundo nivel de profundidad desde la raíz _regex_).
+- **parse_model**=[extractor]  (este valor debe coincidir con un directorio de los componentes _regex_, un nivel por debajo de _newspaper_. Puede contener múltiples valores separados por coma y representan los diferentes modelos de extracción, según el tipo de noticia a tratar. Por ejemplo, los periódicos con manifiestos de  descargas y relación de embarcaciones entradas, deberían disponer de dos modelos, ya que los datos extraídos en cada caso son diferentes. En esta utilidad este dato puede usarse para albergar distintos segregadores para cada modelo).
+- **ocr_engine_model**=documentAI  (este valor es opcional y puede o no aparecer como directorio del sistema _regex_. En el caso de existir un directorio auxiliar con este nombre en cualquier nivel de los directorios _regex_ tendría por objetivo de este ofrecer una opción alternativa a una expresión regular dada debido a la idiosincrasia específica en la transcripción de un motor OCR concreto). 
+
+Ejemplo de ejecución:
+
+`$ ./_BoatFactCutterTest.run -c config/conf_db/init.properties -d text_db -o resultats/cu`
+
+Por cada fichero de entrada, esta utilidad producirá tantos ficheros como ítems tenga el parámetro _parse_model_, ya que se da por supuesto que en un mismo periódico los fragmentos correspondientes a distintos tipos de noticias estarán ubicados en  lugares distintos y, por tanto, tendrán detectores de inicio y final diferentes. Para distinguirlos, los ficheros de salida tomarán el nombre original al que añadirán un sufijo formado por el nombre del parse_model precedido del guion-subrayado (_). Por ejemplo, si `parse_model=[entradas,manifiestos]`, el tratamiento de un fichero llamado `1852_01_02_BCN_DB_U_07_0002.txt` daría como resultado los siguientes archivos:
+ - `1852_01_02_BCN_DB_U_07_0002_entradas.txt`
+ - `1852_01_02_BCN_DB_U_07_0002_manifiestos.txt`
 
 
 
