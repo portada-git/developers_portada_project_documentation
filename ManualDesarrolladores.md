@@ -640,11 +640,61 @@ Aseguraros que el directorio _config_ es vuestro repositorio local de _portada_b
 La aplicación _autoNewsExtractorDev_ no tiene versión gráfica. Debe usarse desde la consola del sistema ejecutando cada un de los scripts, o directamente el ejecutable si la extensión _jar _ la tenéis asociada a la máquina virtual JAVA. El .jar esta compilado para ser ejecutado por la versión 11 o superior de la máquina virtual. Si disponéis de una máquina virtual de inferior versión actualizadla.
 
 Los scripts que encontraréis en el directorio de instalación (_run_autonewsextractor_dev_) de la aplicación son:
- - *BoatFactInfoUnitJoinTest.run* / *BoatFactInfoUnitJoinTest.bat*. Este script permite configurar y testear la funcionalidad de "ensamblaje de los archivos digitales de una misma unidad informativa". Para hacer el test se necesitan diversos archivos de varias unidades informativas, algunas de ellas compuestas por más de un archivo.
- - *BoatFactCutterTest.run* / *BoatFactCutterTest.bat*. Este script se puede usar para configurar y testear la funcionalidad de "recorte de los fragmentos-objetivo". Para probar será necesario configurar una expresión regular para detectar el inicio del fragmento y otra para detectar el final. Además, se necesitarán archivos de texto ya ensamblados conteniendo el fragmento-objetivo (las entradas de barcos y manifiestos) además de otros textos. Este proceso es independiente del anterior. Pueden usarse archivos arreglados manualmente o los devueltos por la funcionalidad de ensamblaje. 
- - BoatFactExtractTest
- - 
+ - *BoatFactInfoUnitJoinTest.run* / *BoatFactInfoUnitJoinTest.bat*. Este script permite configurar y testear la funcionalidad de "ensamblaje de los archivos digitales de una misma unidad informativa". Es necesario indicarle donde se encuentra el fichero de configuración (init.properties), el directorio con las fuentes de texto y el directorio donde se escribirán los nuevos ficheros ensamblados.  Para hacer el test se necesitan diversos archivos de varias unidades informativas, algunas de ellas compuestas por más de un archivo.
+ - *BoatFactCutterTest.run* / *BoatFactCutterTest.bat*. Este script se puede usar para configurar y testear la funcionalidad de "recorte de los fragmentos-objetivo". Para probar será necesario configurar una expresión regular para detectar el inicio del fragmento y otra para detectar el final. Además, se necesitarán archivos de texto ya ensamblados conteniendo el fragmento-objetivo (las entradas de barcos y manifiestos) además de otros textos. Necesita que se le indique donde se encuentra el fichero de configuración, el directorio con los ficheros fuente y el directorio donde guardar los fragmentos segregados. Este proceso es independiente del anterior. Pueden usarse archivos arreglados manualmente o los devueltos por la funcionalidad de ensamblaje. 
+ - *BoatFactExtractTest.run* / *BoatFactExtractTest,bat*. Este script está preparado para probar la extracción de datos de ficheros de texto con el contenido de las noticias de entradas de barcos y manifiestos. Para ello deberán configurarse las expresiones regulares pertinentes y el archivo JSON que lo gestiona. Se le deberá indicar donde se encuentra el fichero de configuración, el directorio con los ficheros fuente y el nombre base (sin extensión) del fichero donde escribirá los datos extraídos en un formato  JSON.
+ - *BoatFactExtract.run* / *BoatFactExtract.bat*. Una vez probada cada una de las funcionalidades por separado, mediante este script es posible integrarlas todas ellas en un solo proceso. Requiere la indicación de la ubicación del fichero de configuración, el directorio fuente y el nombre base del fichero donde escribir la lista de resultados. 
+ -  *BoatFactExtractorCommand.run* / *BoatFactExtractorCommand.bat*. Este es un script genérico que mediante un argumento extra permite ejecutar los  4 procesos anteriores. El argumento extra debe posicionarse en primer lugar y debe tener alguno de los siguientes valores: 'information_unit_test', 'cut_test', 'extract_test' o 'extract', Inmediatamente después del comando deberán especificarse los mismos argumentos usados para las diferentes funcionalidades según sea el caso.
+ 
+ Finalmente, si la extensión '_.jar_' se encuentra asociada a la máquina virtual _java_, debería poder usar-se directamente el ejecutable (_boat_fact_extractor.jar_) pasándole los mismos argumentos que los pasados al script anterior.
 
 Los archivos de texto para realizar las pruebas deberán contener las noticias procesadas de manera que cada párrafo se encuentre escrito en una única línea. Los párrafos, títulos, cabeceras, números de página, etc. se encontrarán separados por un único salto de línea. 
+
+## Configuración y prueba de la utilidad _BoatFactInfoUnitJoinTest_
+
+Esta utilidad requiere de configuración muy simple y un banco de pruebas relativamente pequeño. No precisa de expresión regular alguna y al existir un único enfoque solo será necesario comprobar que el fichero "init.properties" contenga los siguientes atributos y valores:
+ - **information_unit_builder_proxy_packages_to_search**=org.elsquatrecaps.autonewsextractor.informationunitbuilder.reader
+ - **file_extension**=txt
+ - **informationUnitBuilderType**=file_name
+ - **metadataSource**=portada_file_name
+
+En el directorio fuente colocar ficheros de texto con nombres que sigan el patrón definido en el apartado [Ensamblador de archivos digitales](#ensamblador-de-archivos-digitales). Es decir: AAAA_MM_DD_PUE_NP_E_PG_BLOC.txt. Con independencia del contenido, asegurad que disponéis de una variedad de nombres suficiente para probar las distintas posibilidades.
+
+Argumentos de la ejecución:
+
+ - **-c**: indicará el nombre y ubicación del fichero de configuración inicial. Per  ejemplo: `-c config/conf_db/init.properties`
+ - **-d**: debe contener la ruta del directorio donde se encuentran los ficheros de texto a tratar. Ejemplo: `-d data_db`
+ - **-o**: indica la ruta del directorio de salida donde se desea escribir los ficheros resultantes. Los ficheros de la entrada que no respondan al patrón esperado no se copiaran a la salida. Los ficheros con la misma fecha, periódico y edición, pero con distintas páginas o bloques, se unirán en uno solo con el nombre del fichero de página y bloque inferior, seguido del sufijo "__informationUnit_". Si no hay dos o más ficheros coincidentes, pero cumple el patrón esperado, se copiará al directorio de salida añadiendo el mismo sufijo. 
+ 
+Si en el directorio de entrada tenemos los ficheros: 
+ - 1852_01_01_BCN_DB_U_16_0001.txt
+ - 1852_01_02_BCN_DB_U_06_0001.txt
+ - 1852_01_02_BCN_DB_U_07_0001.txt
+ - 1852_01_02_BCN_DB_U_07_0002.txt
+ - aaaaa.txt
+
+Al ejecutar esta utilidad en el directorio de salida obtendríamos los ficheros:
+
+ - 1852_01_01_BCN_DB_U_16_001_informationUnit.txt
+ - 1852_01_02_BCN_DB_U_06_001_informationUnit.txt
+
+Ejemplo de ejecución:
+
+`$ ./BoatFactInfoUnitJoinTest.run -c config/conf_db/init.properties -d text_db -o resultats/iu`
+
+## Configuración y prueba de la utilidad _BoatFactCutterTest_
+
+Esta utilidad necesita crear al menos dos ficheros con expresiones regulares. Dependiendo de los periódicos  se podrán necesitar 4. El objetivo de estas expresiones regulares consiste en detectar cuál es el inicio y el final del fragmento-objetivo de manera que se pueda dividir todo el texto de un periódico a tratar aislando el fragmento de interés y eliminando el resto. 
+
+Los ficheros conteniendo las expresiones regulares se ubicarán en el directorio "config/regex" y seguirán la lógica descrita en el apartado [Conjunto de expresiones regulares](#conjunto-de-expresiones-regulares).  
+
+### Detector del fragmento inicial
+
+Deberá responder al nombre de "fragment_initial_detector" y al ser la expresión generadora necesitará de la extensión .regex, con la expresión deseada, y la extensión .options, con las opciones de procesamiento activas. Esta expresión deberá dividir el texto del fichero en  3 grupos:
+ 1. El primer grupo contendría el texto desde el inicio hasta justo antes, donde empieza el fragmento de interés.
+ 2. El segundo grupo contendrá una parte del texto de interés usada para detectar el inicio del fragmento, por ejemplo el título de la sección, algún subtítulo, etc.
+ 3. El tercer grupo contendrá el texto que vaya desde el final del fragmento de detección hasta el final del fichero.
+ 
+ Veamos un ejemplo. En el Diario de Barclona 
 
 
