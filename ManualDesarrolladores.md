@@ -665,11 +665,33 @@ Los ficheros conteniendo las expresiones regulares se ubicarán en el directorio
 
 ### Detector del fragmento inicial
 
-Deberá responder al nombre de "fragment_initial_detector" y al ser la expresión generadora necesitará de la extensión .regex, con la expresión deseada, y la extensión .options, con las opciones de procesamiento activas. Esta expresión deberá dividir el texto del fichero en  3 grupos:
+Deberá responder al nombre de "fragment_initial_detector" y al ser la expresión generadora necesitará de la extensión .regex, con la expresión deseada, y también la extensión .options, con las opciones de procesamiento activas. Esta expresión deberá dividir el texto del fichero en  3 grupos:
  1. El primer grupo contendría el texto desde el inicio hasta justo antes, donde empieza el fragmento de interés.
  2. El segundo grupo contendrá una parte del texto de interés usada para detectar el inicio del fragmento, por ejemplo el título de la sección, algún subtítulo, etc.
  3. El tercer grupo contendrá el texto que vaya desde el final del fragmento de detección hasta el final del fichero.
  
- Veamos un ejemplo. En el Diario de Barclona 
+ Veamos un ejemplo. En el Diario de Barcelona. En general la sección relativa a las embarcaciones entradas se encuantra dentro de una sección titulada "SANIDAD DEL PUERTO". A este título le sigue la informació relativa al momento en que se produjo la entrada y acto seguido comienza a enunciar las banderas con su lista de embarcaciones. Parece que el título SANIDAD DEL PUERTO puede ser un buen candidato para detectar el inicio de nuestro fragmento de interés. Dicho título no nos resulta útil durante la extracción, por lo que lo ubicaremos dentro del primer grupo (el que se debe descartar). En cambio, tanto la referencia a las embarcaciones llegadas en el día de ayer|hoy|anteayer|..., sí nos resulta útil durante la extracción, para poder calcular la fecha de llegada, ya que este dato no aparece explícitamente en la noticia. Deberemos, por tanto, ubicarlo en el segundo grupo. E el tercer grupo ubicaremos el resto del texto hasta el final del archivo. Veamos.
+Una noticia tipo seria:
+
+	PARTE ECONOMICA.
+	AVISOS CASAS DE HUÉSPEDES.
+	...
+	ABERTURAS DE REGISTRO.
+	Para Tarragona, Coruña y Santander. Saldrá de este puerto a la mayor brevedad posible el bergantin español Firme, forrado en cobre, su capitan D. Santiago Matossi; admite carga á flete para dichos puntos. Lo despachan los Sres. Salazar y Torrents, pórtico Xifré, escritorio рітстран
+	Para Cádiz y escalas. El vapor español Barcino saldrá el 10 del corriente, á las nueve de la mañana: admitiendo cargo y pasajeros. Se despacha en la calle de la Merced, esquina á la plaza de S. Sebastian, número 46, nuevo, cuarto principal.
+	Para Génova y Liorna. Saldrá de este puerto la polacra toscana Calidoro, su capitan D. José Tonietti; para cuyos puntos admite carga á flete y pasajeros. Se despacha en la calle de Abaixadors, núm. 10, cuarto.
+	SANIDAD DEL PUERTO.
+	Embarcaciones llegadas al puerto en el dia de ayer.
+	Mercantes españolas.
+	De Christiansund en 33 d. bergantin Fama, de 109 t., c. D. V. Ramon Rodriguez, con 5930 vogs bacalao y 200 de pezpalo á la órden.
+	De Almería y Aguilas en 15 d. laud Aguila, de 35 t., p. S. Lopez, con 130 gq. perdigon es á D. A. Sala, 50 id. á D. J. Margarit. 400 de plomo á D. J. Serratosa, 200 fanegas cebada á Don B. Solá y Amat, y 12 millares esparto á D. S. Garriga.
+	...
+	Mercante francesa.
+	De Marsella en 21 horas vapor Elba, de 210 t., c. S. Gabriel , con 69,000 francos á los señores Vidal y Cuadras hermanos, 83,000 id. á los señores Girona hermanos, Clavé y compañía , 23,000 id. D. J. M. Serra, 21,900 id. á los señores Serra y Parladé, 13.000 id. á D. B. Roca y Cortada, 15.000 id. á los señores Staguo, Torrens y compañia, 1500 id. á D. 1. Domenech, 3 cajas sangnijuclas á don B. Solá y Amat, otros efertos para esta, y 103 baltos de varios géneros de tránsito y 30 pasajeros, consignado á los señores Martorell y Bosill.
+	Despachadas el 30 de diciembre.
+	Bergantin español Wifredo, c. D. J. Ferrer, para Valparaiso con vino, pimenton y bacalao. ...
+
+
+
 
 
