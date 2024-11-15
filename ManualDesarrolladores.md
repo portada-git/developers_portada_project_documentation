@@ -3,35 +3,6 @@
 <h2>Manual para desarrolladores: Extracción de información de noticias en el contexto del proyecto portada</h2>
 </div>
 
-# Table of Contents
-
- 1. [Manual para desarrolladores](#manual-para-desarrolladores)
- 2. [La biblioteca _jportada_auto_news_extractor_lib_](#la-biblioteca-jportada_auto_news_extractor_lib)
-	1. [Funcionalidades de *jportada_auto_news_extractor_lib*](#funcionalidades-de-jportada_auto_news_extractor_lib)
-		1. [Ensamblador de archivos digitales](#ensamblador-de-archivos-digitales)
-		2. [Cortador de los fragmentos objetivo](#cortador-de-los-fragmentos-objetivo)
-		3. [Analizador para extraer la información](#analizador-para-extraer-la-informaci%C3%B3n)
-	2. [Diseño de software basado en proxies](#dise%C3%B1o-de-software-basado-en-proxies)
-		1. [Sistema del proxy para la funcionalidad de ensamblaje de archivos](#sistema-del-proxy-para-la-funcionalidad-de-ensamblaje-de-archivos)
-		2. [Sistema del proxy para la funcionalidad de segregación de fragmentos-objetivo](#sistema-del-proxy-para-la-funcionalidad-de-segregaci%C3%B3n-de-fragmentos-objetivo)
-		3. [Sistema del proxy para la funcionalidad de analizador de contenido para la extracción de datos](#sistema-del-proxy-para-la-funcionalidad-de-analizador-de-contenido-para-la-extracci%C3%B3n-de-datos)
-		4. [Sistema del proxy para las utilidades FieldCalculator](#sistema-del-proxy-para-las-utilidades-fieldcalculator)
-	3. [Configuración](#configuraci%C3%B3n)
-		1. [Inicialización o configuración inicial](#inicializaci%C3%B3n-o-configuraci%C3%B3n-inicial)
-		2. [Conjunto de expresiones regulares](#conjunto-de-expresiones-regulares)
-			1. [Composición de expresiones regulares complejas](#composici%C3%B3n-de-expresiones-regulares-complejas)
-			2. [Directorios de búsqueda de los archivos de expresiones regulares](#directorios-de-b%C3%BAsqueda-de-los-archivos-de-expresiones-regulares)
-			3. [Expresiones regulares alternativas](#expresiones-regulares-alternativas)
-		3. [Conjunto de Prompts para OpenAI](#conjunto-de-prompts-para-openai)
-		4. [Configuración de los extractores de contenido](#configuraci%C3%B3n-de-los-extractores-de-contenido)
-			1. [Configuración de un  analizador de tipo *regex*](#configuraci%C3%B3n-de-un--analizador-de-tipo-regex)
-				1. [Relación jerárquica del contenido](#relaci%C3%B3n-jer%C3%A1rquica-del-contenido)
-				2. [Configuración de cada nivel de extracción](#configuraci%C3%B3n-de-cada-nivel-de-extracci%C3%B3n)
-				3. [Ejemplo de configuración completo](#ejemplo-de-configuraci%C3%B3n-completo)
-			2. [Configuración de un  analizador de tipo *openAI*](#configuraci%C3%B3n-de-un--analizador-de-tipo-openai)
- 3. [Preparación de la configuración](#) 
- 4. [La aplicación _autoNewsExtractorDev_](#)
-
 # Manual para desarrolladores
 
 Este manual se ha creado básicamente para ayudar a los desarrolladores del proyecto **_PorTAda_** a crear los archivos de configuración necesarios para que las aplicaciones PAPI y PAPCLI puedan extraer los datos referentes a las embarcaciones llegadas a los diferentes puertos de estudio referenciadas en los periódicos utilizados como fuentes en el contexto del proyecto portada. 
