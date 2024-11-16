@@ -780,7 +780,106 @@ Por cada fichero de entrada, esta utilidad producirá tantos ficheros como ítem
  - `1852_01_02_BCN_DB_U_07_0002_entradas.txt`
  - `1852_01_02_BCN_DB_U_07_0002_manifiestos.txt`
 
+## Configuración y prueba de la utilidad _BoatFactExtractTest_
 
+Esta es la utilidad que requiere más configuración. Por un lado, el fichero de configuración inicial también será necesario aquí. En su enfoque  basado den expresiones regulares, será necesario adaptar las expresiones a la extracción a realizar. La base seguirá siendo el sistema regex de composición de expresiones regulares. Además, en este caso, la configuración precisará de un fichero JSON que especificará como se debe procesar la extracción, quantos niveles jerárquicos tiene, qué campos conseguiremos extraer y que cálculos serán necesarios para transformar los datos obtenidos con los datos que finalmente deberemos guardar. 
 
+### Configurador JSON de los analizadores para la extracción
+Comencemos por el fichero de configuración de cada analizador que necesitemos. Esto es, quantos tipos de noticias tenemos en el periódico a tratar. Si la información se encuentra en un único tipo de noticia, como por ejemplo en _Le Semaphore de Marseille_ solo serà necesario definir un único analizador y el argumento llamada *parse_model* del fichero de configuración inicial "init.properties" contendrá un nombre único. Por contra, el resto de periódicos, necesitará probablemente 2 o más. En ese caso, el argumento _parse_model_ contendrá tantos nombres diferentes como analizadores sean necesarios. Cabe recordar que el nombre es solo un identificador y puede tomar cualquier valor, con la única restricción que el nombre no puede contener _comas_. Por ejemplo, en el caso de El Diario de Barcelona, se han bautizado los analizadores con los nombres _boatdata.extractor_ y _boatcosta.extractor_. Dichos nombres serán tomados como claves  en el fichero de configuración JSON y permitirán seleccionar la configuración específica correspondiente a cada analizador.
+
+#### Consideraciones previas
+De momento comenzaremos la configuración con un único analizador al que llamaremos "boatdata".  En caso de que necesitemos más, una vez configurado este, repetiremos la operación para el resto.
+
+Antes de empezar a configurarlo, deberemos tener en cuenta la información conocida hasta el momento. Básicamente, los metadatos extraídos del nombre del fichero que corresponde al ejemplar del periódico transcrito por un proceso OCR, pero que conocerlos nos permitirá usarlos para deducir otros.
+
+También deberíamos conocer los campos (nombres y significado) aceptados en la versión actual del proyecto. Posiblemente, algunos de estos campos puedan variar de nombre durante las distintas fases de desarrollo. Por ello, se ha contemplado  el versionado y la información dinámica. Podéis consultar la información relativa a los campos en la misma aplicación _autoNewsExtractorDev_ usando el script genérico `BoatFactExtractorCommand.[run|bat]` con los argumentos _field_info_ e _-i_ con una combinación cualquiera de las letras VDCA.
+V indica que queremos ver el nombre de la versión actual, D, la descripción de cada campo, C los cambios sufridos en los nombres de campos en las diferentes versiones y A sería equivalente a poner las 3 letras DCV. Por ejemplo, si ejecutamos:
+
+```
+BoatFactExtractorCommand.run field_info -i DV
+```
+obtendremos:
+```
+                 FIELD INFO                      
+======================================================================
+CURRENT VERSION: boat_fact-00.00.00
+----------------------------------------------------------------------
+======================================================================
+ List of fildes and desciption for the current version
+======================================================================
+CURRENT NAME FIELD                 FIELD DESCRIPTION                  
+----------------------------------------------------------------------
+model_version:    Indicates the version of the field name model.
+----------------------------------------------------------------------
+publication_date:    Displays the date of the newspaper
+----------------------------------------------------------------------
+publication_name:    Displays the name of the newspaper
+----------------------------------------------------------------------
+publication_edition:    Indicates the edition of the newspaper in case there is more than one per day: M for morning, T for afternoon or N for evening. In case there is only one edition, the value will be U (unique).
+----------------------------------------------------------------------
+fact_type:    This is the type of news analyzed. It can take values ​​such as E for ship entrances or M for discharge manifests.
+----------------------------------------------------------------------
+ship_departure_port:    Indicates the port of departure of the ship in this travel
+----------------------------------------------------------------------
+ship_arrival_port:    Indicates the port of arrival (Marseille, Buenos Aires, Havana or Barcelona) of the ship in this travel. In most cases, this information does not appear in the news and is implicitly deduced depending on the newspaper
+----------------------------------------------------------------------
+ship_departure_date:    It denotes the ship’s departure date from the departure port
+----------------------------------------------------------------------
+ship_arrival_date:    Indicates the date that the ship arrived in the arrival port (Marseille, Buenos Aires, Havana or Barcelona)
+----------------------------------------------------------------------
+travel_arrival_moment_value:    Indicates the time of arrival at port. It can be expressed as the time of arrival or as a broader period (morning, afternoon, evening, ...)
+----------------------------------------------------------------------
+ship_travel_time:    Indicates the time that the ship was travelling from the departure port to the arrival port days or hours
+----------------------------------------------------------------------
+ship_travel_time_unit:    Indicates the unit of time in which the duration is expressed.
+----------------------------------------------------------------------
+ship_port_of_call_list:    Indicates the list of ports (and optionally more information as arrival or departure dates) that the ship had stopped while on her way to the arrival port. If the information of this list is only the name of ports, the list will be compounded by port names separated by commas
+----------------------------------------------------------------------
+ship_port_of_call_place:    Show the name of one item of the port of call list
+----------------------------------------------------------------------
+ship_port_of_call_arrival_date:    Show the arrival date of one item of the port of call list
+----------------------------------------------------------------------
+ship_port_of_call_departure_date:    Show the departure date of one item of the port of call list
+----------------------------------------------------------------------
+ship_type:    Describes the type of the ship (brick, brick-goelette, trois-mats, vapeur etc) that the newspaper mention
+----------------------------------------------------------------------
+ship_flag:    Refers to the name of the country or region of the flag of the ship describe by the newspaper
+----------------------------------------------------------------------
+ship_name:    Indicates the name of the ship typically presented in full, like is mention in the newspaper source
+----------------------------------------------------------------------
+ship_tons:    Specifies the ship’s capacity in tons presented as a numerical value with the unit of measurement. In the case of the ships this remains always the same as it refers to the tonnage of the ship. This data is given usually with abbreviations such as "ton." or "t."
+----------------------------------------------------------------------
+ship_master_role:    It refers to the category of the person who commands the ship. It can be a captain or a skipper, although in a few cases a pilot also appears. The abbreviations used to designate them are usually “c” and “p”, respectively
+----------------------------------------------------------------------
+ship_master_name:    It is the nominal identification of the person who commands the ship. It can appear in various ways, at least it has the surname, preceded by his position (role). Lists the surname of the ship's captain, often preceded by "cap." or "c."
+----------------------------------------------------------------------
+ship_agent:    This information could indicate either the ship agent, namely the person that is responsible for the transactions and the operation of the ship or the shipowner, namely the person that owns the ship or part of the ship. Sometimes it can also refers to shipowner
+----------------------------------------------------------------------
+ship_crew:    It is the numerical value of the ship's crew.
+----------------------------------------------------------------------
+ship_cargo_list:    It is the description of the list with the information related to all the cargo transported by the incoming vessel (type of cargo, quantity, person receiving of the cargo, if any or "to order" otherwise, etc.)
+----------------------------------------------------------------------
+cargo_merchant:    It is the person to whom the cargo was destined, often it will be the merchant who had bought it and who took charge of it at the time of unloading. Indicates the recipient of the cargo, with occasional mention of "divers" [various/several].
+In this case we see names of people or companies. These names have the same characteristics and difficulties as the rest of the names. Sometimes the ships arrived in full loads and were destined for the same person, and in other cases, each load had its recipient. The expression “a la orden” also appears frequently, which in principle is a load to be sold upon arrival at the port and which, on the contrary, does not have a previous owner, beyond the captain himself personally or on behalf of someone.
+----------------------------------------------------------------------
+cargo_type:    It expresses the products or types of goods that have arrived. It is a very variable value, the most common goods are coal or cotton, but there is an extraordinary diversity of products that arrive at the port.
+----------------------------------------------------------------------
+cargo_value:    Numerical expression of the amount of charge
+----------------------------------------------------------------------
+cargo_unit:    Expresses the units in which the load appears. These may be units of weight, volume, counts, or units related to packaging.
+----------------------------------------------------------------------
+cargo_origin:    Port of origin of the cargo
+----------------------------------------------------------------------
+cargo_destination:    Port of destination of the cargo
+----------------------------------------------------------------------
+ship_quarantine:    Information relative to special conditions of the arrival motivated by sanitary circumstances.
+----------------------------------------------------------------------
+ship_forced_arrival:    Indication about the causes of the forced arrival
+----------------------------------------------------------------------
+ship_amount:    This field appears only in quantitative models where, instead of specifying the information for each ship, the number of vessels that have arrived or are about to arrive is indicated. Normally, it is a model specifically intended for cabotage transport.
+----------------------------------------------------------------------
+ship_origin_area:    This field appears only in quantitative models where, instead of specifying information about each ship, the area of ​​origin or transport is used. Normally, it is a model specifically intended for cabotage transport.
+```
+Usar los nombres de campos vigentes es de suma importancia en un proyecto como PorTAda. Por ello,  deberemos extremar las precauciones. A fin de minimizar los errores, el proceso de extracción dispone de un verificador de versión y nombre de campos para los ficheros de configuración JSON, ya que pueden quedar obsoletos en un cambio de versión y no resulta fácil detectarlos. La verificación implica la comprobación de la versión indicada en el fichero, pero también los nombres de los campos usados. En caso de detectar alguna diferencia con la versión actual, el proceso se aborta y se avisa del problema con un mensaje en la consola.
 
 
