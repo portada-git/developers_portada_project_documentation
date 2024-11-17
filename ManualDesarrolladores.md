@@ -780,13 +780,16 @@ Por cada fichero de entrada, esta utilidad producirá tantos ficheros como ítem
  - `1852_01_02_BCN_DB_U_07_0002_entradas.txt`
  - `1852_01_02_BCN_DB_U_07_0002_manifiestos.txt`
 
-
 ## Configuración y prueba de la utilidad _BoatFactExtractTest_
 
-Esta es la utilidad que requiere más configuración. Por un lado, el fichero de configuración inicial también será necesario aquí. En su enfoque  basado den expresiones regulares, será necesario adaptar las expresiones a la extracción a realizar. La base seguirá siendo el sistema regex de composición de expresiones regulares. Además, en este caso, la configuración precisará de un fichero JSON que especificará como se debe procesar la extracción, quantos niveles jerárquicos tiene, qué campos conseguiremos extraer y que cálculos serán necesarios para transformar los datos obtenidos con los datos que finalmente deberemos guardar. 
+Esta es la utilidad que requiere más configuración. Por un lado, el fichero de configuración inicial también será necesario aquí. En su enfoque  basado den expresiones regulares, será necesario adaptar las expresiones a la extracción a realizar. La base seguirá siendo el sistema regex de composición de expresiones regulares. Además, en este caso, la configuración precisará de un fichero JSON que especificará como se debe procesar la extracción, cuantos niveles jerárquicos tiene, qué campos conseguiremos extraer y que cálculos serán necesarios para transformar los datos obtenidos con los datos que finalmente deberemos guardar. 
+
+La complejidad de la configuración aconseja ir haciendo ajustes poco a poco, en cada una de les partes, en lugar de completar cada uno de los ficheros por separado. Probablemente, la metodología más adecuada consiste en ir añadiendo, uno a uno, los datos a extrer, de manera que antes de añadir una nuevo podamos probar el anterior y verifiquemos que funciona en los distintos casos.   
+
+
 
 ### Configurador JSON de los analizadores para la extracción
-Comencemos por el fichero de configuración de cada analizador que necesitemos. Esto es, quantos tipos de noticias tenemos en el periódico a tratar. Si la información se encuentra en un único tipo de noticia, como por ejemplo en _Le Semaphore de Marseille_ solo serà necesario definir un único analizador y el argumento llamada *parse_model* del fichero de configuración inicial "init.properties" contendrá un nombre único. Por contra, el resto de periódicos, necesitará probablemente 2 o más. En ese caso, el argumento _parse_model_ contendrá tantos nombres diferentes como analizadores sean necesarios. Cabe recordar que el nombre es solo un identificador y puede tomar cualquier valor, con la única restricción que el nombre no puede contener _comas_. Por ejemplo, en el caso de El Diario de Barcelona, se han bautizado los analizadores con los nombres _boatdata.extractor_ y _boatcosta.extractor_. Dichos nombres serán tomados como claves  en el fichero de configuración JSON y permitirán seleccionar la configuración específica correspondiente a cada analizador.
+Comencemos por el fichero de configuración de cada analizador que necesitemos. Esto es, cuantos tipos de noticias tenemos en el periódico a tratar. Si la información se encuentra en un único tipo de noticia, como por ejemplo en _Le Semaphore de Marseille_ solo serà necesario definir un único analizador y el argumento llamada *parse_model* del fichero de configuración inicial "init.properties" contendrá un nombre único. Por contra, el resto de periódicos, necesitará probablemente 2 o más. En ese caso, el argumento _parse_model_ contendrá tantos nombres diferentes como analizadores sean necesarios. Cabe recordar que el nombre es solo un identificador y puede tomar cualquier valor, con la única restricción que el nombre no puede contener _comas_. Por ejemplo, en el caso de El Diario de Barcelona, se han bautizado los analizadores con los nombres _boatdata.extractor_ y _boatcosta.extractor_. Dichos nombres serán tomados como claves  en el fichero de configuración JSON y permitirán seleccionar la configuración específica correspondiente a cada analizador.
 
 #### Consideraciones previas
 De momento comenzaremos la configuración con un único analizador al que llamaremos "boatdata".  En caso de que necesitemos más, una vez configurado este, repetiremos la operación para el resto.
@@ -936,4 +939,42 @@ Una vez explicado con más detalle el proceso de extracción, vamos a plantear o
 Podemos conseguir la información de los azules desde el patrón morado evitando así la creación del extractor especifico de los azules. Enonces para que dicha información se extienda a todas las demás entradas moradas, se debe forzar una copia de los campos propiamente azules. 
 
 Por tanto, tenemos dos maneras válidas de tratar la información jerárquica que solo se aparece una vez o bien creamos un analizador específico que extraiga su información o bien la extraemos des de el analizador del nivel siguiente y forzamos su cópia.
+
+### Creación del fichero JSON
+El nombre del fichero se encuentra indicado en el atributo *parser_config_json_file* del archivo de configuración inicial de la aplicación (init.properties) y por defecto en el proyecto _PorTAda_ se encuentra en la ruta relativa *config/config_[IP]/extractor_config.json*, donde [IP] es el identificador de cada periódico (db, dm, lp, sm...) . Si se mantiene esta ruta podremos trabajar con los diferentes periódicos para hacer pruebas.
+
+Su contenido dependerá de cada periódico,  pero inicialmente debéis añadir, al menos, el nombre del modelo de extracción que hayáis decidido escribir en el artributo *parse_model*, por ejemplo, *boatdata* y su configuración, la cual inicialmente deberá tener, la versión actual de campos (boat_fact-00.00.00) y las constantes que consideréis (al menos la que os permita indicar el nombre de vuestro puerto). Por ejemplo, para el diario de Barcelona, pondríamos:
+
+```json
+{
+    "boatdata": {
+        "field_version": "boat_fact-00.00.00",
+        "constants": {"arrival_port": "Barcelona"}
+}
+````
+
+Seguidamente, debéis hacer la reflexión de cuantos niveles de jerarquía necesitaréis. Vamos a suponer que se requieran dos niveles. La clave config será un array con dos posiciones, una para cada nivel. En cada uno de los niveles se debe definir, el enfoque que en este caso deberá ser de tipo "_regex_" y la configuración propia del enfoque _regex_.
+
+```json
+{
+    "boatdata": {
+        "field_version": "boat_fact-00.00.00",
+        "constants": {"arrival_port": "Barcelona"}
+        "config":[
+	        {
+		        "approach_type": "regex",
+		        "configuration": {
+	                "configuración": "para el primer nivel"
+	          },
+	          {
+		          "approach_type": "regex",
+		          "configuration": {
+			          "configuración": "para el segundo nivel"
+		        }
+        ]
+    }
+}
+```
+
+Para cada nivel debeis encontrar que 
 
