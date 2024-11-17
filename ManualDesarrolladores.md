@@ -780,6 +780,7 @@ Por cada fichero de entrada, esta utilidad producirá tantos ficheros como ítem
  - `1852_01_02_BCN_DB_U_07_0002_entradas.txt`
  - `1852_01_02_BCN_DB_U_07_0002_manifiestos.txt`
 
+
 ## Configuración y prueba de la utilidad _BoatFactExtractTest_
 
 Esta es la utilidad que requiere más configuración. Por un lado, el fichero de configuración inicial también será necesario aquí. En su enfoque  basado den expresiones regulares, será necesario adaptar las expresiones a la extracción a realizar. La base seguirá siendo el sistema regex de composición de expresiones regulares. Además, en este caso, la configuración precisará de un fichero JSON que especificará como se debe procesar la extracción, quantos niveles jerárquicos tiene, qué campos conseguiremos extraer y que cálculos serán necesarios para transformar los datos obtenidos con los datos que finalmente deberemos guardar. 
@@ -882,4 +883,57 @@ ship_origin_area:    This field appears only in quantitative models where, inste
 ```
 Usar los nombres de campos vigentes es de suma importancia en un proyecto como PorTAda. Por ello,  deberemos extremar las precauciones. A fin de minimizar los errores, el proceso de extracción dispone de un verificador de versión y nombre de campos para los ficheros de configuración JSON, ya que pueden quedar obsoletos en un cambio de versión y no resulta fácil detectarlos. La verificación implica la comprobación de la versión indicada en el fichero, pero también los nombres de los campos usados. En caso de detectar alguna diferencia con la versión actual, el proceso se aborta y se avisa del problema con un mensaje en la consola.
 
+#### Análisis inicial del texto
+Otro aspecto importante que debemos hacer antes de comenzar a especificar la configuración del extractor consiste en analizar el patrón de texto usado en las noticias donde queremos realizar la extracción.  Las primeras características a analizar son las jerarquías del texto y sus patrones, la repetición de los mismos, la información heredada y la información implícita.
+
+La información implícita se refiere a la información que no aparece en ninguna parte de la noticia, pero que debemos suministrar al modelo de datos. Por ejemplo, generalmente el puerto de llegada no suele aparecer como dato, pero necesitaos especificarlo, ya en el proyecto se trabaja con varios. La información implícita la añadiremos en forma de constante y usaremos el calculador "*DataFromConstantCalculator*" o "*DataFromConstantMapAndConfigKeyCalculator*" para asignar este valor al campo deseado.
+
+Para analizar las jerarquías, revisar el apartado [Relación jerárquica del contenido](#relaci%C3%B3n-jer%C3%A1rquica-del-contenido). Es necesario que detectemos, además de la relación de jerarquía, si esa estructura jerárquica se repite varias veces a lo largo de la sección o solo aparece una sola vez al inicio. Por ejemplo, en el Diario de Barcelona se dan los dos casos. En el inicio de la sección se informa del momento de la llegada. Pongamos por caso: "Embarcaciones llegadas anteayer". Esta información aparece únicamente una vez. Sin embargo, se informa de la bandera mediante un subtítulo y se repite varias veces para los barcos entrados de diferentes nacionalidades. Debajo de la bandera se van repitiendo las entradas de cada embarcación siguiendo un formato bien definido. Así pues, dispondremos de tres niveles jerárquicos, de las cuales el primero no se repite nunca.
+
+Debemos entender el proceso de análisis basado en expresiones regulares como un proceso cíclico de búsqueda parcial del patrón textual  identificado por la expresión regular. Cada vez que se encuentra el patrón dentro del texto, se extrae la información  y acto seguido se sigue la búsqueda en el texto que queda por analizar hasta llegar al final. El extractor de la biblioteca _jportada_auto_news_extractor_lib_ lo que hace, es aprovechar este proceso para que, después de cada búsqueda, se almacene el texto analizado en el que no se ha encontrado el patrón buscado, par aplicar en él, una nueva búsqueda del extractor de siguiente nivel. 
+
+Veamos un ejemplo gráfico para ilustrarlo. Imaginemos que nuestro texto fuera como el gráfico de colores de la imagen y que la jerarquía, en lugar de ir de arriba a abajo, fuera de izquierda a derecha. Por tanto, la información de recuadro azul pertenecería a todo el texto (jerarquía más alta). Los recuadros morados representarían el segundo nivel de la jerarquía y los naranjas el tercero. Así, cada recuadro naranja, además de su información, debería tener también la que le corresponda de morado y la situada en el color azul.
+
+![Ejemplo de jerarquía con colores](media/jerarquiaColores.png) 
+
+Cuando el proceso de extracción de la aplicación comienza a procesar, se escoge el primer extractor de la jerarquía, el cual buscará todos los patrones azules existentes en el texto. Al encontrar el primero al inicio del texto, extrae la información y continua su búsqueda con el texto restante.  
+
+![Ejemplo de jerarquía con colores](media/jerarquiaColores2.png) 
+
+Al no haber más texto con el patrón azul, se reserva la información extraída y se cambia al extractor de segundo nivel, el cual detectará patrones morados. Encontrará el primero al inicio del texto analizado, extraerá la información y continuará buscando.
+
+![Ejemplo de jerarquía con colores](media/jerarquiaColores3.png) 
+
+Se encuentra el siguiente patrón morado, pero como no se encuentra al inicio del texto, se extrae su información (asociándola a la extraída del nivel anterior) y se reserva el texto donde no se ha encontrado nada, para realizar un análisis de tercer nivel cuando se acabe con el del segundo. Se sigue buscando.
+
+![Ejemplo de jerarquía con colores](media/jerarquiaColores4.png) 
+
+Se repite la operación con el siguiente patrón morado.
+
+![Ejemplo de jerarquía con colores](media/jerarquiaColores5.png) 
+
+ Al no quedar más patrones morados se reserva el texto para el siguiente nivel.
+
+![Ejemplo de jerarquía con colores](media/jerarquiaColores6.png) 
+
+Al activar el analizador del tercer nivel (para buscar patrones naranjas), encuentra el primer texto al inicio, lo reserva y asocia a la información encontrada en niveles anteriores. La búsqueda sigue.
+
+![Ejemplo de jerarquía con colores](media/jerarquiaColores7.png) 
+
+Se repite la operación con el último texto reservado en el primer bloque de morados. La búsqueda continua con el segundo bloque de morados.
+
+![Ejemplo de jerarquía con colores](media/jerarquiaColores8.png) 
+
+El proceso se repite para cada bloque has conseguir la información completa de todos.
+
+![Ejemplo de jerarquía con colores](media/jerarquiaColores11.png) 
+
+Una vez explicado con más detalle el proceso de extracción, vamos a plantear otra solución para las jerarquías que no se repiten. La biblioteca _jportada_auto_news_extractor_lib_ permite forzar la copia de los campos que se indiquen, entre búsquedas de un mismo nivel jerárquico. En este tipo de noticias, los mensajes pueden ser bastante crípticos, debido a la necesidad de reducir el texto tanto como sea posible. Esto hace que, a veces, alguna información aparecida en anteriormente, se suponga implícita y no aparezca en la nueva entrada. No pasa siempre, pero puede darse el caso. También podemos aprovechar  esta característica para ahorrarnos la creación de un nivel de extracción cuando la información de un nivel superior no se repite nunca (aparece solamente una vez). Siguiendo con el ejemplo de colores, si al patrón de búsqueda de morados le añadimos una alternativa consistente en buscar azules y morados. Es decir,  
+```
+{##azules##}\n{##morados##}
+{##morados##}
+```
+Podemos conseguir la información de los azules desde el patrón morado evitando así la creación del extractor especifico de los azules. Enonces para que dicha información se extienda a todas las demás entradas moradas, se debe forzar una copia de los campos propiamente azules. 
+
+Por tanto, tenemos dos maneras válidas de tratar la información jerárquica que solo se aparece una vez o bien creamos un analizador específico que extraiga su información o bien la extraemos des de el analizador del nivel siguiente y forzamos su cópia.
 
