@@ -296,7 +296,58 @@ En muchas ocasiones la información escrita mantiene cierta relación jerárquic
 
 Esta deducción responde a la estructura implícita en la distribución textual. Así podemos concluir que desde el primer subtítulo ("mercantes españolas" en el ejemplo) hasta el siguiente ("id. oldenburguesa") las embarcaciones comparten la bandera que se extraiga del subtítulo. Las que se encuentran  entre el segundo y tercer subtitulo, en cambio, comparten la bandera extraída del subtítulo ("oldenburguesas") y las que se encuentran debajo del tercer subtítulo hasta el final deberán ser "inglesas".
 
-En este caso, se necesitará más de una expresión regular para analizar y extraer toda la información contenida en la sección. Por un lado, necesitaremos, al menos,  una expresión regular que identifique los subtítulos y extraiga la bandera y por otro, una expresión regular que identifique y extraiga el resto de información para el texto que quede entre subtítulo y subtítulo. En el caso del ejemplo, vamos a ver que solamente con dos tipos de expresiones tendremos suficiente para extraer toda la información. Por tanto,  el atributo *config* de fichero JSON deberá tener dos especificaciones, una para configurar la extracción de la información de los subtítulos y otra para configurar la extracción del texto situado entre subtítulos.
+En este caso, se necesitará más de una expresión regular para analizar y extraer toda la información contenida en la sección. Por un lado, necesitaremos, al menos,  una expresión regular que identifique los subtítulos y extraiga la bandera y por otro, una expresión regular que identifique y extraiga el resto de información para el texto que quede entre subtítulo y subtítulo.  Por tanto,  el atributo *config* de fichero JSON podrá tener varias especificaciones dependiendo de cuantos niveles de jerárquicos tenga nuestro texto. 
+
+##### Funcionamiento del extractor basado en expresiones regulares
+
+Debemos entender el proceso de análisis basado en expresiones regulares como un proceso cíclico de búsqueda parcial del patrón textual  identificado por la expresión regular. Cada vez que se encuentra el patrón dentro del texto, se extrae la información  y acto seguido se sigue la búsqueda en el texto que queda por analizar hasta llegar al final. El extractor de la biblioteca _jportada_auto_news_extractor_lib_ lo que hace, es aprovechar este proceso para que, después de cada búsqueda, se almacene el texto analizado en el que no se ha encontrado el patrón buscado, par aplicar en él, una nueva búsqueda del extractor de siguiente nivel. 
+
+Veamos un ejemplo gráfico para ilustrarlo. Imaginemos que nuestro texto fuera como el gráfico de colores de la imagen y que la jerarquía, en lugar de ir de arriba a abajo, fuera de izquierda a derecha. Por tanto, la información de recuadro azul pertenecería a todo el texto (jerarquía más alta). Los recuadros morados representarían el segundo nivel de la jerarquía y los naranjas el tercero. Así, cada recuadro naranja, además de su información, debería tener también la que le corresponda de morado y la situada en el color azul.
+
+![Ejemplo de jerarquía con colores](media/jerarquiaColores.png) 
+
+Cuando el proceso de extracción de la aplicación comienza a procesar, se escoge el primer extractor de la jerarquía, el cual buscará todos los patrones azules existentes en el texto. Al encontrar el primero al inicio del texto, extrae la información y continua su búsqueda con el texto restante.  
+
+![Ejemplo de jerarquía con colores](media/jerarquiaColores2.png) 
+
+Al no haber más texto con el patrón azul, se reserva la información extraída y se cambia al extractor de segundo nivel, el cual detectará patrones morados. Encontrará el primero al inicio del texto analizado, extraerá la información y continuará buscando.
+
+![Ejemplo de jerarquía con colores](media/jerarquiaColores3.png) 
+
+Se encuentra el siguiente patrón morado, pero como no se encuentra al inicio del texto, se extrae su información (asociándola a la extraída del nivel anterior) y se reserva el texto donde no se ha encontrado nada, para realizar un análisis de tercer nivel cuando se acabe con el del segundo. Se sigue buscando.
+
+![Ejemplo de jerarquía con colores](media/jerarquiaColores4.png) 
+
+Se repite la operación con el siguiente patrón morado.
+
+![Ejemplo de jerarquía con colores](media/jerarquiaColores5.png) 
+
+ Al no quedar más patrones morados se reserva el texto para el siguiente nivel.
+
+![Ejemplo de jerarquía con colores](media/jerarquiaColores6.png) 
+
+Al activar el analizador del tercer nivel (para buscar patrones naranjas), encuentra el primer texto al inicio, lo reserva y asocia a la información encontrada en niveles anteriores. La búsqueda sigue.
+
+![Ejemplo de jerarquía con colores](media/jerarquiaColores7.png) 
+
+Se repite la operación con el último texto reservado en el primer bloque de morados. La búsqueda continua con el segundo bloque de morados.
+
+![Ejemplo de jerarquía con colores](media/jerarquiaColores8.png) 
+
+El proceso se repite para cada bloque hasta conseguir la información completa de todos ellos.
+
+![Ejemplo de jerarquía con colores](media/jerarquiaColores9.10.png) 
+
+##### Copia de datos en el mismo nivel
+
+Una vez visto con detalle el proceso de extracción en textos jerárquicos, vamos a plantear otra posible solución para las jerarquías que no se repiten. La biblioteca _jportada_auto_news_extractor_lib_ permite forzar la copia de los campos que se indique, entre búsquedas de un mismo nivel jerárquico. En este tipo de noticias, los mensajes pueden ser bastante crípticos, debido a la necesidad de reducir el texto tanto como sea posible. Esto hace que, a veces, alguna información aparecida en anteriormente, se suponga implícita y no aparezca en la nueva entrada. No pasa siempre, pero puede darse el caso. Si ocurre deberemos forzar la copia. Podemos aprovechar, también,  esta característica, para ahorrarnos la creación de un nivel de extracción cuando la información de un nivel superior no se repita nunca (aparezca solamente una vez). Siguiendo con el ejemplo de colores, si al patrón de búsqueda de morados le añadimos una alternativa consistente en buscar azules y morados. Es decir,  
+```
+{##azules##}\n{##morados##}
+{##morados##}
+```
+Podemos conseguir la información de los azules desde el patrón morado, evitando así la creación del extractor específico de los azules. Entonces, para que dicha información se extienda a todas las demás entradas moradas, deberemos forzar una copia de los campos propiamente azules. 
+
+Por tanto, tenemos dos maneras válidas de tratar la información jerárquica que solo se aparece una vez, o bien creamos un extractor específico que obtenga su información, o bien la extraemos desde el extractor del nivel siguiente y forzamos su copia.
 
 ##### Configuración de cada nivel de extracción
 
