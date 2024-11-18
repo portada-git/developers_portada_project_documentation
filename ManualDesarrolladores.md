@@ -833,13 +833,6 @@ Por cada fichero de entrada, esta utilidad producirá tantos ficheros como ítem
 
 ## Configuración y prueba de la utilidad _BoatFactExtractTest_
 
-Esta es la utilidad que requiere más configuración. Por un lado, el fichero de configuración inicial también será necesario aquí. En su enfoque  basado den expresiones regulares, será necesario adaptar las expresiones a la extracción a realizar. La base seguirá siendo el sistema regex de composición de expresiones regulares. Además, en este caso, la configuración precisará de un fichero JSON que especificará como se debe procesar la extracción, cuantos niveles jerárquicos tiene, qué campos conseguiremos extraer y que cálculos serán necesarios para transformar los datos obtenidos con los datos que finalmente deberemos guardar. 
-
-La complejidad de la configuración aconseja ir haciendo ajustes poco a poco, en cada una de les partes, en lugar de completar cada uno de los ficheros por separado. Probablemente, la metodología más adecuada consiste en ir añadiendo, uno a uno, los datos a extrer, de manera que antes de añadir una nuevo podamos probar el anterior y verifiquemos que funciona en los distintos casos.   
-
-
-## Configuración y prueba de la utilidad _BoatFactExtractTest_
-
 Esta es la utilidad que requiere más configuración. Por un lado, el fichero de configuración inicial también será necesario aquí. Para el enfoque  basado en expresiones regulares, será necesario adaptar las expresiones a la extracción a realizar, teniendo en cuenta el sistema _regex_ de composición de expresiones complejas ya explicado (ver el apartado [Composición de expresiones regulares complejas](#composici%C3%B3n-de-expresiones-regulares-complejas)). Además, la configuración precisará también de un fichero JSON que especifique como se debe procesar la extracción, cuantos niveles jerárquicos debe tener, qué campos querremos extraer y que cálculos serán necesarios, para transformar los datos obtenidos, a los datos que finalmente guardaremos. 
 
 ### Datos previos a la extracción
