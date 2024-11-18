@@ -13,7 +13,7 @@ Antes de entrar en detalle sobre la cuestión práctica de la configuración de 
 
 # La Biblioteca _jportada_auto_news_extractor_lib_
 
-La biblioteca *[jportada_auto_news_extractor_lib](https://github.com/portada-git/jportada_auto_news_extractor_lib)*, es una biblioteca genérica para facilitar la creación de utilidades orientadas a la extracción de datos de fuentes textuales. Presenta una gran flexibilidad, lo que supone minimizar la creación de nuevo código. A continuación valor a presentar 3 funcionalidades que serán útiles para realizar la extracción en el contexto del proyecto portada.
+La biblioteca *[jportada_auto_news_extractor_lib](https://github.com/portada-git/jportada_auto_news_extractor_lib)*, es una biblioteca genérica para facilitar la creación de utilidades orientadas a la extracción de datos de fuentes textuales. Presenta una gran flexibilidad, lo que supone minimizar la creación de nuevo código. A continuación presentamos 3 funcionalidades que serán útiles para realizar la extracción en el contexto del proyecto portada.
 
 ## Funcionalidades de *jportada_auto_news_extractor_lib*
 ### Ensamblador de archivos digitales
@@ -34,86 +34,56 @@ Por ello, es importante que los nombres de los archivos sigan el patrón descrit
   - PG contendrán el número de página, con dos dígitos de manera obligatoria,
   - Los últimos 4 dígitos (BLOC) indicarán el número del bloque del que se ha transcrito el texto.
 
-Por ejemplo, el archivo 1854_04_25_BUE_EN_U_E_08_005.txt indicaría que se trata del quinto bloque de la página 8 de las noticias referidas a las entradas de buques al puerto de Buenos Aires del periódico _El Nacional_ de la única edición del día 25 de abril de 1854.
+Por ejemplo, el archivo 1854_04_25_BUE_EN_U_E_08_0005.txt indicaría que se trata del quinto bloque de la página 8 de las noticias referidas a las entradas de buques al puerto de Buenos Aires del periódico _El Nacional_ de la única edición del día 25 de abril de 1854.
 
 ### Cortador de los fragmentos objetivo 
-Una vez unidos todos los bloques en un único cabe segregar el texto objetivo donde se encuentra la noticia o sección de la cual extraer la información del resto de texto. Esta funcionalidad de búsqueda y segregación de los fragmentos-objetivo de estudio,  Para ello, en el proyecto PortAda se usará el enfoque basado en expresiones regulares que delimiten el inicio y el final de la sección. La composición de estas expresiones regulares sigue la metodología usada por la biblioteca _jportada_auto_news_extractor_lib_ que se explicará más adelante. El objetivo de esta funcionalidad consiste en reducir las posibilidades de error en el momento de realizar la extracción, eliminando de forma previa los fragmentos de noticias y secciones ajenas a la información que se quiere extraer. De esta forma, el proceso de extracción se hará únicamente con el texto necesario, evitando así, posible ruido que pueda falsear e inducir a error de los datos extraídos.
+
+Una vez unidos todos los bloques en uno solo, esta función extrae el fragmento o la sección de noticias de destino para su análisis, separándolo del contenido no relacionado. En el proyecto PortAda, esto se logra utilizando expresiones regulares para definir los puntos de inicio y fin de la sección relevante. Este paso garantiza que solo se procese el texto requerido, lo que reduce el ruido que podría introducir errores durante la extracción de datos.
 
 ### Analizador para extraer la información
+
 La última de las funcionalidades tiene como objetivo extraer los datos contenidos en el texto de las noticias, clasificándolo en categorías predefinidas a las que llamaremos campos. Estos son:
 
-__model_version__: Indica la versión del nombre del campo model.
-
-__publication_date__: Muestra la fecha del periódico
-
-__publication_name__: Muestra el nombre del periódico
-
-__publication_edition__: Indica la edición del periódico en caso de que haya más de una al día: M para mañana, T para tarde o N para noche. En caso de que haya una sola edición el valor será U (única).
-
-__fact_type__: Es el tipo de noticia que se analiza. Puede tomar valores como E para entradas de buques o M para manifiestos de descarga.
-
-__ship_departure_port__: Indica el puerto de salida del buque en este viaje
-
-__ship_arrival_port__: Indica el puerto de llegada (Marsella, Buenos Aires, La Habana o Barcelona) del buque en este viaje. En la mayoría de los casos, esta información no aparece en las noticias y se deduce implícitamente según el periódico
-
-__ship_departure_date__: Indica la fecha de salida del barco del puerto de salida
-
-__ship_arrival_date__: Indica la fecha en la que el barco llegó al puerto de llegada (Marsella, Buenos Aires, La Habana o Barcelona)
-
-__travel_arrival_moment_value__: Indica la hora de llegada al puerto. Puede expresarse como hora de llegada o como un periodo más amplio (mañana, tarde, noche, ...)
-
-__ship_travel_time__: Indica el tiempo que el barco estuvo viajando desde el puerto de salida al puerto de llegada días u horas
-
-__ship_travel_time_unit__: Indica la unidad de tiempo en la que se expresa la duración.
-
-__ship_port_of_call_list__: Indica la lista de puertos (y opcionalmente más información como fechas de llegada o salida) en los que el barco había hecho escala durante su trayecto al puerto de llegada. Si la información de esta lista es solo el nombre de los puertos, la lista estará compuesta por nombres de puertos separados por comas. En caso contrario, cada información de escala se encerrará entre paréntesis cuadrados separados, también por comas, y dentro de cada uno de ellos se especificaran si fuera posible: el nombre del puerto, la fecha de llegada a ese puerto y la fecha de salida (de acuerdo a los 3 campos siguientes). 
-
-__ship_port_of_call_place__: Muestra el nombre del puerto de un elemento de la lista de puertos de escala
-
-__ship_port_of_call_arrival_date__: Muestra la fecha de llegada de un elemento de la lista de puertos de escala
-
-__ship_port_of_call_departure_date__: Muestra la fecha de salida de un elemento de la lista de puertos de escala
-
-__ship_type__: Describe el tipo de barco (bergantín, goleta,  vapor, etc.) que menciona el periódico
-
-__ship_flag__: Hace referencia al nombre del país o región de la bandera del barco descrito por el periódico
-
-__ship_name__: Indica el nombre del barco que normalmente se presenta completo, como se menciona en la fuente del periódico
-
-__ship_tons__: Especifica la capacidad del barco en toneladas presentada como un valor numérico con la unidad de medida. En el caso de los barcos, esto siempre es lo mismo, ya que se refiere al tonelaje del buque. Este dato se da normalmente con abreviaturas como "ton." o "t."
-
-__ship_master_role__: Hace referencia a la categoría de la persona que comanda el buque. Puede ser capitán o patrón, aunque en algunos casos también aparece piloto. Las abreviaturas que se utilizan para designarlos suelen ser “c” y “p”, respectivamente
-
-__ship_master_name__: Es la identificación nominal de la persona que comanda el buque. Puede aparecer de varias formas, al menos lleva el apellido, precedido de su cargo (rol). Indica el apellido del capitán del buque, a menudo precedido de “cap.” o “c.”
-
-__ship_agent__: Esta información puede indicar tanto el agente del buque, es decir, la persona que se encarga de las transacciones y la operación del buque, como el armador, es decir, la persona que es propietaria del buque o de parte del mismo. En ocasiones también puede hacer referencia al armador
-
-__ship_crew__: Es el valor numérico de la tripulación del buque.
-
-__ship_cargo_list__: Es la descripción de la lista con la información relativa a toda la carga transportada por el buque entrante (tipo de carga, cantidad, persona receptora de la carga, si la hay o “a la orden” en caso contrario, etc.). Inicialmente, se mostrará como descripción textual separada por comas, pero en una segunda fase, cada mercancía se descompondrá en los 6 siguientes campos.
-
-__cargo_merchant__: Es la persona a la que iba destinada la carga, muchas veces será el comerciante que la había comprado y que se hizo cargo de ella en el momento de la descarga. Indica el destinatario de la carga, con ocasional mención a “divers” [varios/diversos].
+ - __model_version__: Indica la versión del nombre del campo model.
+ - __publication_date__: Muestra la fecha del periódico
+ - __publication_name__: Muestra el nombre del periódico
+ - __publication_edition__: Indica la edición del periódico en caso de que haya más de una al día: M para mañana, T para tarde o N para noche. En caso de que haya una sola edición el valor será U (única).
+ - __fact_type__: Es el tipo de noticia que se analiza. Puede tomar valores como E para entradas de buques o M para manifiestos de descarga.
+ - __ship_departure_port__: Indica el puerto de salida del buque en este viaje
+ - __ship_arrival_port__: Indica el puerto de llegada (Marsella, Buenos Aires, La Habana o Barcelona) del buque en este viaje. En la mayoría de los casos, esta información no aparece en las noticias y se deduce implícitamente según el periódico
+ - __ship_departure_date__: Indica la fecha de salida del barco del puerto de salida
+ - __ship_arrival_date__: Indica la fecha en la que el barco llegó al puerto de llegada (Marsella, Buenos Aires, La Habana o Barcelona)
+ - __travel_arrival_moment_value__: Indica la hora de llegada al puerto. Puede expresarse como hora de llegada o como un periodo más amplio (mañana, tarde, noche, ...)
+ - __ship_travel_time__: Indica el tiempo que el barco estuvo viajando desde el puerto de salida al puerto de llegada días u horas
+ - __ship_travel_time_unit__: Indica la unidad de tiempo en la que se expresa la duración.
+ - __ship_port_of_call_list__: Indica la lista de puertos (y opcionalmente más información como fechas de llegada o salida) en los que el barco había hecho escala durante su trayecto al puerto de llegada. Si la información de esta lista es solo el nombre de los puertos, la lista estará compuesta por nombres de puertos separados por comas. En caso contrario, cada información de escala se encerrará entre paréntesis cuadrados separados, también por comas, y dentro de cada uno de ellos se especificaran si fuera posible: el nombre del puerto, la fecha de llegada a ese puerto y la fecha de salida (de acuerdo a los 3 campos siguientes). 
+ - __ship_port_of_call_place__: Muestra el nombre del puerto de un elemento de la lista de puertos de escala
+ - __ship_port_of_call_arrival_date__: Muestra la fecha de llegada de un elemento de la lista de puertos de escala
+ - __ship_port_of_call_departure_date__: Muestra la fecha de salida de un elemento de la lista de puertos de escala
+ - __ship_type__: Describe el tipo de barco (bergantín, goleta,  vapor, etc.) que menciona el periódico
+ - __ship_flag__: Hace referencia al nombre del país o región de la bandera del barco descrito por el periódico
+ - __ship_name__: Indica el nombre del barco que normalmente se presenta completo, como se menciona en la fuente del periódico
+ - __ship_tons__: Especifica la capacidad del barco en toneladas presentada como un valor numérico con la unidad de medida. En el caso de los barcos, esto siempre es lo mismo, ya que se refiere al tonelaje del buque. Este dato se da normalmente con abreviaturas como "ton." o "t."
+ - __ship_master_role__: Hace referencia a la categoría de la persona que comanda el buque. Puede ser capitán o patrón, aunque en algunos casos también aparece piloto. Las abreviaturas que se utilizan para designarlos suelen ser “c” y “p”, respectivamente
+ - __ship_master_name__: Es la identificación nominal de la persona que comanda el buque. Puede aparecer de varias formas, al menos lleva el apellido, precedido de su cargo (rol). Indica el apellido del capitán del buque, a menudo precedido de “cap.” o “c.”
+ - __ship_agent__: Esta información puede indicar tanto el agente del buque, es decir, la persona que se encarga de las transacciones y la operación del buque, como el armador, es decir, la persona que es propietaria del buque o de parte del mismo. En ocasiones también puede hacer referencia al armador
+ - __ship_crew__: Es el valor numérico de la tripulación del buque.
+ - __ship_cargo_list__: Es la descripción de la lista con la información relativa a toda la carga transportada por el buque entrante (tipo de carga, cantidad, persona receptora de la carga, si la hay o “a la orden” en caso contrario, etc.). Inicialmente, se mostrará como descripción textual separada por comas, pero en una segunda fase, cada mercancía se descompondrá en los 6 siguientes campos.
+ - __cargo_merchant__: Es la persona a la que iba destinada la carga, muchas veces será el comerciante que la había comprado y que se hizo cargo de ella en el momento de la descarga. Indica el destinatario de la carga, con ocasional mención a “divers” [varios/diversos].
 En este caso vemos nombres de personas o empresas. Estos nombres tienen las mismas características y dificultades que el resto de denominaciones. En ocasiones los barcos llegaban a carga completa y estaban destinados a la misma persona, y en otros casos, cada carga tenía su destinatario. También aparece con frecuencia la expresión “a la orden”, que en principio es una carga para ser vendida a su llegada a puerto y que, por el contrario, no tiene un propietario anterior, más allá del propio capitán personalmente o por cuenta de alguien.
+ - __cargo_type__: Expresa los productos o tipos de mercancías que han llegado. Es un valor muy variable, las mercancías más habituales son el carbón o el algodón, pero existe una extraordinaria diversidad de productos que llegan al puerto.
+ - __cargo_value__: Expresión numérica del importe de la carga
+ - __cargo_unit__: Expresa las unidades en las que aparece la carga. Estas pueden ser unidades de peso, volumen, recuentos o unidades relativas al embalaje.
+ - __cargo_origin__: Puerto de origen de la carga
+ - __cargo_destination__: Puerto de destino de la carga
+ - __ship_quarantine__: Información relativa a condiciones especiales de la llegada motivadas por circunstancias sanitarias.
+ - __ship_forced_arrival__: Indicación sobre las causas de la llegada forzosa
+ - __ship_amount__: Este campo aparece únicamente en modelos cuantitativos donde, en lugar de especificar la información de cada buque, se indica el número de buques que han llegado o están a punto de llegar. Normalmente, se trata de un modelo específicamente pensado para el transporte de cabotaje.
+ - __ship_origin_area__: Este campo aparece únicamente en modelos cuantitativos donde, en lugar de especificar la información de cada buque, se utiliza la zona de origen o de transporte. Normalmente, se trata de un modelo específicamente destinado al transporte de cabotaje.
 
-__cargo_type__: Expresa los productos o tipos de mercancías que han llegado. Es un valor muy variable, las mercancías más habituales son el carbón o el algodón, pero existe una extraordinaria diversidad de productos que llegan al puerto.
-
-__cargo_value__: Expresión numérica del importe de la carga
-
-__cargo_unit__: Expresa las unidades en las que aparece la carga. Estas pueden ser unidades de peso, volumen, recuentos o unidades relativas al embalaje.
-
-__cargo_origin__: Puerto de origen de la carga
-
-__cargo_destination__: Puerto de destino de la carga
-
-__ship_quarantine__: Información relativa a condiciones especiales de la llegada motivadas por circunstancias sanitarias.
-
-__ship_forced_arrival__: Indicación sobre las causas de la llegada forzosa
-
-__ship_amount__: Este campo aparece únicamente en modelos cuantitativos donde, en lugar de especificar la información de cada buque, se indica el número de buques que han llegado o están a punto de llegar. Normalmente, se trata de un modelo específicamente pensado para el transporte de cabotaje.
-
-__ship_origin_area__: Este campo aparece únicamente en modelos cuantitativos donde, en lugar de especificar la información de cada buque, se utiliza la zona de origen o de transporte. Normalmente, se trata de un modelo específicamente destinado al transporte de cabotaje.
-
-En este caso existirán dos enfoques metodológicos para realizar la extracción, seleccionables mediante un atributo en el fichero de configuración (ver el apartado de configuración).  Uno de ellos estará basado en expresiones regulares (compuestas también siguiendo la metodología usada por la biblioteca _jportada_auto_news_extractor_lib_ que se explicará más adelante). El otro enfoque se basará en el uso de inteligencia artificial generativa (concretamente OpenAI).  
+Hay dos enfoques metodológicos disponibles para la extracción:
+1. **Basado en expresiones regulares**: se basa en expresiones regulares y tiene componentes definidos en la biblioteca.
+2. **Basado en IA**: utiliza IA generativa (OpenAI) para la extracción de datos.
 
 ## Diseño de software basado en proxies
 La biblioteca *[jportada_auto_news_extractor_lib](https://github.com/portada-git/jportada_auto_news_extractor_lib)* se ha diseñado para permitir diversos enfoques metodológicos en el tratamiento de la extracción. A fin de facilitar el desarrollo de los enfoques actuales y permitir futuras alternativas, la biblioteca dispone de un conjunto de proxies capaces de manejar, de forma transparente, múltiples enfoques que respondan a una funcionalidad determinada, organizada alrededor de una interfaz.
@@ -153,12 +123,15 @@ A fin de facilitar todas las posibles inicializaciones de modo automatizado, est
 El método calculate, puede recibir un parámetro con un objeto, a lista que contenga todos los datos necesarios. Por ejemplo, el calculador llamado *ReplaceIdemByValueCalculator* recibe un array de cadenas de caracteres con dos posiciones, en la primera se enviará el valor actual del campo que se desea manipular en caso de que contenga la palabra* idem* o equivalente. Puesto que ello significa que el valor de eses campo, en realidad hace referencia al último valor obtenido para ese mismo campo durante la anterior extracción. Dicho valor se pasa como segunda posición del array.  La mayoría de calculadores no están diseñados para manipular directamente los campos (a excepción de los que se inicialicen con el parámetro *extracted_data* como ya se ha indicado) sino únicamente para calcular el valor de manera que por configuración se pueda asignar el valor al campo preciso. Esto permite reutilizar los calculadores genéricos en múltiples ocasiones (ver el apartado Configuracion para conocer como configurar este sistema de cálculo). 
 
 ## Configuración
-La biblioteca _jportada_auto_news_extractor_lib_ dispone de diversos sistemas de configuración, los cuales se complementan entre sí. El sistema se inicializa argumentos pasados desde el sistema y también mediante un fichero típico de configuración (ini, properties, ...) el cual contiene en cada línea el nombre de un atributo junto a su valor separado por ":".  Por otro lado, la biblioteca, para aquellos enfoques basados en expresiones regulares, dispone de un conjunto de carpetas y ficheros donde se pueden definir, de forma parcial, expresiones regulares que podrán aprovecharse en la composición de expresiones más complejas. A este tipo de configuración la llamaremos _conjunto de expresiones regulares_ y generalmente se ubicará en el directorio "regex", aunque existe un atributo de configuración inicial que pude asignar otra ubicación. Existe todavía un tercer sistema de configuración específico para definir la extracción. Tiene formato JSON y generalmente se encuentra en un archivo llamado _extractor_config.json_, pero de nuevo, desde la configuración inicial, puede especificarse el nombre y ruta donde se ha ubicado. 
+La biblioteca *jportada_auto_news_extractor_lib* incluye varios sistemas de configuración que se complementan entre sí. El sistema se inicializa utilizando parámetros pasados ​​a través de la línea de comandos o a través de un archivo de configuración estándar (por ejemplo, `.ini`, `.properties`). Este archivo contiene atributos y sus valores separados por un carácter igual. Además, para los enfoques basados ​​en expresiones regulares, la biblioteca admite un conjunto de archivos de configuración almacenados en directorios, lo que permite la definición de expresiones regulares parciales. Estas pueden combinarse para crear expresiones complejas. A este tipo de configuración la llamaremos _conjunto de expresiones regulares_ o systema _regex_ y generalmente se ubicará en el directorio "regex", aunque existe un atributo de configuración inicial que pude asignar otra ubicación.
+
+Existe todavía un tercer sistema de configuración específico para definir la extracción. Tiene formato JSON y generalmente se encuentra en un archivo llamado _extractor_config.json_, pero de nuevo, desde la configuración inicial, puede especificarse el nombre y ruta donde se ha ubicado. 
 
 Seguidamente, describiremos con más detalles estos 3 sistemas  de configuración.
 
 ### Inicialización o configuración inicial
- El sistema se inicializa mediante argumentos pasados desde el sistema y también mediante un fichero típico de configuración (ini, properties, ...) el cual contiene en cada línea el nombre de un atributo junto a su valor separado por ":".  Por defecto, la biblioteca busca un fichero llamado _init.properties_ en el directorio de ejecución o en el subdirectorio llamado _config_, pero se le puede pasar otra ubicación usando el argumento -c [RUTA_INIT_PROPERTIES] desde el sistema. Casi todos los atributos permitidos en el fichero se pueden pasar usando el sistema (consola). De esta forma se puede decidir qué argumentos se pasan desde el fichero y qué otros desde el sistema. En caso de que se pasaran argumentos repetidos por fichero y consola, estos últimos tendría siempre prioridad sobre los definidos en el fichero. Desde la consola los atributos a pasar son:
+
+El sistema se puede inicializar mediante argumentos de línea de comandos o un archivo de configuración (`.ini`, `.properties`). Por defecto, la biblioteca busca un fichero llamado _init.properties_ en el directorio de ejecución o en el subdirectorio llamado _config_, pero se le puede pasar otra ubicación usando el argumento -c [RUTA_INIT_PROPERTIES] desde el sistema. Casi todos los atributos permitidos en el fichero se pueden pasar usando el sistema (consola). De esta forma se puede decidir qué argumentos se pasan desde el fichero y qué otros desde el sistema. En caso de que se pasaran argumentos repetidos por fichero y consola, estos últimos tendría siempre prioridad sobre los definidos en el fichero. Desde la consola los atributos a pasar son:
 
 **-h**, **--help** show this help message and exit
  
@@ -209,27 +182,30 @@ A fin de poder generar expresiones regulares complejas, la biblioteca _jportada_
 Una expresión compuesta podría ser: 
 ```
 ^(.*{##embarcaciones##} {##llegadas##} .{2,7} {##puerto##}.{8,25})\s+$
-``` 
+```
+
 Esta expresión buscaría el contenido del fichero _embarcaciones.regex_ y reemplazaría la posición ocupada por `{##embarcacione##}` con el contenido encontrado en el fichero. También buscaría el fichero _llegadas.regex_ y el fichero _puerto.regex_ realizando la misma operación de reemplazo. 
 
 Imaginemos que el fichero _embarcaciones.regex_ contuviera la expresión:
 ```
 [EA]{2,3}barca.{2,4}nes
-``` 
+```
+
 Que el contenido de _llegadas.regex_ fuera:
 ```
 (?:(?:[|i¡l][|i¡l])|(?:[UHN]))[eoa]g[aoeu]d..
 
-``` 
+```
+
 Y el de _puerto.regex_ fuera:
 ```
 p[uo][eo]rt[oe]
-``` 
+```
 
 La expresión final conseguida con el ejemplo anterior sería:
 ```
 ^(.*[EA]{2,3}barca.{2,4}nes (?:(?:[|i¡l][|i¡l])|(?:[UHN]))[eoa]g[aoeu]d.. .{2,7} p[uo][eo]rt[oe].{8,25})\s+$
-``` 
+```
 
 #### Directorios de búsqueda de los archivos de expresiones regulares
 
@@ -237,9 +213,15 @@ Cabe tener en cuenta que la biblioteca _jportada_auto_news_extractor_lib_ dispon
 
 ![Estructura jerárquica de la ubicación de los archivos .regex](media/jerarquiaRegex.png)
 
-Dicha jerarquía, actualmente está pensada para tener 4 niveles de profundidad a partir de la raíz. El directorio raíz representaría el nivel 0 y en él se ubicarían archivos con expresiones regulares muy genéricas, las cuales puedan usarse como componentes de otras expresiones de extracción en cualquier tipo de noticias; por ejemplo, la expresión regular para identificar la palabra "idem" o equivalente, o quizás, la expresión ampliada del concepto dígito para textos OCR de baja calidad. El primer nivel hace referencia al tipo de hecho o noticia (en el caso de portada "*boatfacts*"). Allí, deberíamos encontrar expresiones regulares para usar como componentes de otras más complejas, las cuales (las primeras) se consideren específicas del tipo de noticias, pero suficientemente genéricas  como para poderlas compartir entre distintas noticias del mismo tipo pero de distintos periódicos. Por  ejemplo, la expresión regular que define la palabra "*embarcaciones*" podría, seguramente,  ser reutilizada en múltiples noticias de entradas o salidas de barcos indistintamente del periódico donde estuvieran escritas. El siguiente nivel representa el periódico (db, dm, en, lp, sm, ...) y en él se ubican expresiones específicas para un tipo de noticia de un periódico determinado. Por ejemplo, si en el Diario de Barcelona (db) las banderas de los barcos que rezan a continuación de la primera suelen empezar por la palabra "idem" seguida de la nacionalidad (idem francesas, idem inglesas, ...) donde idem hace referencia al propósito de las embarcaciones de la primera bandera (generalmente "mercantes españolas"), parece razonable que este periódico y no otro disponga de una expresión regular para descubrir la palabra idem solamente si se encuentra en el principio de línea y si va seguida de una única palabra. El tercer nivel de profundidad permite definir: o bien expresiones regulares muy específicas del modelo de extractor a utilizar, o bien las expresiones regulares iniciales a partir de las cuales el sistema montará la expresión regular compleja, sustituyendo recursivamente los componentes que cada una de ellas pudiera tener. Las expresiones regulares iniciales deberán tener también un archivo con el mismo nombre i extensión *.options* donde se definirán las opciones (banderas) de proceso de la expresión regular final. Las opciones, siguiendo las notaciones estandardizadas de las expresiones regulares, se indican con una letra y pueden tomar uno o más valores de la siguiente colección; g (búsqueda global), m (búsqueda multilínea), i (búsqueda sin distinguir entre mayúsculas o minúsculas - case **i**nsensitive), s (búsqueda de saltos de línea incluidos, se toma toda la cadena como si fura una línea única), U (la búsqueda soporta los caracteres unicode), u (si está marcada la bandera i, los caracteres unicode especiales se buscan también sin tener en cuanta las mayúsculas o minúsculas).
+La jerarquía de directorios está diseñada en 4 niveles de profundidad:
+1. Nivel 0 (raíz): Se ubican archivos con expresiones regulares muy genéricas, las cuales puedan usarse como componentes de otras expresiones aplicables a cualquier tipo de noticias.
+2. Nivel 1: Específico para noticias de un tipo determinado. Por ejemplo, noticias sobre hechos de embarcaciones (*boatfacts*), como entradas a puerto, descargas, etc.
+3. Nivel 2: Específico para el tratamiento concreto que un determinado periódico hace sobre un tipo de noticia. Por ejemplo, la estructura específica balo la que el Diario de Barcelona agrupa las noticias sobre barcos.
+4. Nivel 3: Específico para soportar el modelo extractor. Permite definir, o bien expresiones regulares muy específicas del modelo, o bien las expresiones regulares iniciales a partir de las cuales el sistema compondrá la expresión regular compleja con la que hacer la extracción.
 
-El sistema es capaz de encontrar el nombre de un archivo con extensión .regex o .options, se encuentre donde se encuentre dentro de la jerarquía definida a partir del directorio raíz. Además, la búsqueda se realiza de dentro a fuera, de manera que los más específicos se descubren antes que los más genéricos. De esta forma, aunque hubiera ficheros con nombres repetidos, el sistema encontraría primero siempre el más específico. Así, si un extractor de expresiones regulares tiene un componente que no se acaba de adaptar, puede crear otro con el mismo nombre en un nivel más profundo.
+ Las expresiones regulares raíz, también llamadas iniciales o principales, porque son la primera expresión compuesta a partir de la cual, recursivamente, se va a generar la expresión final, necesita un archivo auxiliar con el mismo nombre, pero con extensión "_.options_", para definir las opciones (banderas) del proceso de búsqueda de la expresión siguiendo las notaciones estandarizadas:  g (búsqueda global), m (búsqueda multilínea), i (búsqueda sin distinguir entre mayúsculas o minúsculas - case **i**nsensitive), s (búsqueda de saltos de línea incluidos, se toma toda la cadena como si fura una línea única), U (la búsqueda soporta los caracteres unicode), u (si está marcada la opción 'i', los caracteres unicode especiales se buscan también sin tener en cuanta las mayúsculas o minúsculas).
+ 
+El sistema garantiza que los archivos encuentren dentro de la estructura _regex_, sin especificar la ubicación, conociendo solamente el nombre. La búsqueda se realiza desde el nivel más específico hacia afuera, lo que permite flexibilidad para reemplazar expresiones regulares genéricas por expresiones regulares más específicas.
 
 #### Expresiones regulares alternativas
 
@@ -249,7 +231,7 @@ El contenido de los ficheros .regex debe ser una expresión regular válida con 
 E[mn]b.*[eo][s5]
 [EA]{2,3}barca.{2,4}nes
 .{1,3}barc.{1,2}c[i¡Il1][oec]n[eosc]
-``` 
+```
 Al resolverse se construiría la expresión compleja siguiente:
 ```
 (:?E[mn]b.*[eo][s5])|(:?[EA]{2,3}barca.{2,4}nes)|(:?.{1,3}barc.{1,2}c[i¡Il1][oec]n[eosc])
@@ -262,9 +244,9 @@ Esta "sintaxis" facilita mucho la creación de expresiones regulares muy complej
 
 ### Configuración de los extractores de contenido
 
-Los extractores o analizadores de contenido para la extracción, se configurarán mediante un fichero JSON, cuya estructura permite gestionar la instanciación y ejecución  de uno a más extractores de algún enfoque válido ("regex" o "openAi") capaces de trabajar de forma coordinada con las clases de la biblioteca _jportada_auto_news_extractor_lib_ para obtener una lista con los datos extraídos de las noticias de un conjunto de archivos con el texto fruto de la transcripción OCR de las imágenes de los periódicos.
+Los extractores o analizadores de contenido orientados a la extracción, se configurarán mediante un fichero JSON, cuya estructura permite gestionar la instanciación y ejecución  de uno a más extractores, ya tengan enfoque "regex" u "openAI". 
 
-Como ya se ha comentado, a menudo, la información a extraer puede responder a más de un patrón textual dentro de una misma noticia, sección o periódico. Ello nos obliga a poder trabajar con más de un analizador (uno para cada patrón de texto allado). Por ejemplo, en el Diario de Barcelona, en la misma sección de embarcaciones llegadas conviven dos tipos de patrones textuales, aquellos que detallan las características del viaje, de la embarcación y la carga transportada, rezando con un patrón similar a "De [PUERTO_DE SALIDA] [, ESCALA[, ... [y ULTIMA_ESCALA]]] en [TIEMPO] [DIAS_HORAS], [TIPO_EMBARCACION] [NOMBRE_EMBARCACION]..." , y los que informa de las embarcaciones de cabotaje, que en lugar de detallar cada embarcación informan del número de barcos y la carga que llevan entre todos ellos. En este caso, el patrón textual es "Además [NUMERO_DE_EMBARCACIONES] buques de la costa de este principado se dirigen a puerto  con [DETALLE_DE_LA_CARGA]".  Al ser patrones tan diferentes, será necesario definirlos por separado.
+A menudo, la información a extraer puede responder a más de un patrón textual dentro de una misma noticia, sección o periódico. Ello nos obliga a trabajar con más de un analizador (uno para cada patrón de texto existente). Por ejemplo, en el Diario de Barcelona, en la misma sección de embarcaciones llegadas conviven dos tipos de patrones textuales, aquellos que detallan las características del viaje, de la embarcación y la carga transportada: "De [PUERTO_DE SALIDA] [, ESCALA[, ... [y ULTIMA_ESCALA]]] en [TIEMPO] [DIAS_HORAS], [TIPO_EMBARCACION] [NOMBRE_EMBARCACION]..." , y los que informa de las embarcaciones de cabotaje, que en lugar de detallar cada embarcación, informan del número de barcos y la carga que llevan entre todos ellos. En este caso, el patrón textual es: "Además, [NUMERO_DE_EMBARCACIONES] buques de la costa de este principado se dirigen a puerto  con [DETALLE_DE_LA_CARGA]".  Al ser patrones tan diferentes, será necesario definirlos por separado.
 
 En el atributo llamado "_parse_model_" del fichero de configuración (*init.properties*) debe detallarse la lista de analizadores para la extracción de los diferentes patrones, indicando los nombres de estos separados por coma. El nombre es solo un identificador y puede tomar cualquier valor. La única restricción es que deben coincidir los nombres definidos en el atributo  "_parse_model_", con las claves indicadas en el fichero de configuración JSON. Imaginemos que el atributo parse_model se encuentra definido como: `parse_model=[boatdata.extractor,boatcosta.extractor]` el fichero de configuración de los analizadores deberá contener estas dos claves y cada una de ellas describirá un objeto JSON con la configuración específica:
 ```json
@@ -277,7 +259,6 @@ En el atributo llamado "_parse_model_" del fichero de configuración (*init.prop
     }
 }   
 ```
-La configuración de cada analizador de contenido para la extracción depende del enfoque que se defina, el cual, como se ha indicado, puede ser *regex* o *openAi*. 
 
 #### Configuración de un  analizador de tipo *regex*
 
@@ -295,7 +276,10 @@ La configuración de cada analizador tiene formato de objeto JSON con los siguie
 	}
 }
 ```
-&nbsp; &nbsp; &nbsp; &nbsp; Como puede verse en el ejemplo, cada constante contener datos simples o  datos compuestos.
+<dl><dd>
+Como puede verse en el ejemplo, cada constante contener datos simples o  datos compuestos.
+</dd></dl>
+
  - **config**: Este atributo tiene formato de _array_ y define múltiples niveles de extracción.
 
 Veamos ahora qué significa definir múltiples niveles de extracción y como especificarlos. 
