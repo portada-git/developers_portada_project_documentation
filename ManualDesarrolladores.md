@@ -838,22 +838,29 @@ Esta es la utilidad que requiere más configuración. Por un lado, el fichero de
 La complejidad de la configuración aconseja ir haciendo ajustes poco a poco, en cada una de les partes, en lugar de completar cada uno de los ficheros por separado. Probablemente, la metodología más adecuada consiste en ir añadiendo, uno a uno, los datos a extrer, de manera que antes de añadir una nuevo podamos probar el anterior y verifiquemos que funciona en los distintos casos.   
 
 
+## Configuración y prueba de la utilidad _BoatFactExtractTest_
 
-### Configurador JSON de los analizadores para la extracción
-Comencemos por el fichero de configuración de cada analizador que necesitemos. Esto es, cuantos tipos de noticias tenemos en el periódico a tratar. Si la información se encuentra en un único tipo de noticia, como por ejemplo en _Le Semaphore de Marseille_ solo serà necesario definir un único analizador y el argumento llamada *parse_model* del fichero de configuración inicial "init.properties" contendrá un nombre único. Por contra, el resto de periódicos, necesitará probablemente 2 o más. En ese caso, el argumento _parse_model_ contendrá tantos nombres diferentes como analizadores sean necesarios. Cabe recordar que el nombre es solo un identificador y puede tomar cualquier valor, con la única restricción que el nombre no puede contener _comas_. Por ejemplo, en el caso de El Diario de Barcelona, se han bautizado los analizadores con los nombres _boatdata.extractor_ y _boatcosta.extractor_. Dichos nombres serán tomados como claves  en el fichero de configuración JSON y permitirán seleccionar la configuración específica correspondiente a cada analizador.
+Esta es la utilidad que requiere más configuración. Por un lado, el fichero de configuración inicial también será necesario aquí. Para el enfoque  basado en expresiones regulares, será necesario adaptar las expresiones a la extracción a realizar, teniendo en cuenta el sistema _regex_ de composición de expresiones complejas ya explicado (ver el apartado [Composición de expresiones regulares complejas](#composici%C3%B3n-de-expresiones-regulares-complejas)). Además, la configuración precisará también de un fichero JSON que especifique como se debe procesar la extracción, cuantos niveles jerárquicos debe tener, qué campos querremos extraer y que cálculos serán necesarios, para transformar los datos obtenidos, a los datos que finalmente guardaremos. 
 
-#### Consideraciones previas
-De momento comenzaremos la configuración con un único analizador al que llamaremos "boatdata".  En caso de que necesitemos más, una vez configurado este, repetiremos la operación para el resto.
+### Datos previos a la extracción
+Los datos extraídos del nombre del fichero hacen referencia a información relativa a la publicación (fecha, identificador del periódico, edición y páginas), se encuentran siempre disponibles con datos extraídos, ya que se procesan como datos por defecto. Por tanto, si fuera necesario se podrían usar para calcular otro valores.
 
-Antes de empezar a configurarlo, deberemos tener en cuenta la información conocida hasta el momento. Básicamente, los metadatos extraídos del nombre del fichero que corresponde al ejemplar del periódico transcrito por un proceso OCR, pero que conocerlos nos permitirá usarlos para deducir otros.
+### Modelo de datos y verificación de versiones
+Uno de los aspectos más críticos en un proyecto como PorTAda, es el modelo de datos y su integridad,  tanto por la cantidad campos, como por la evolución que pueden sufrir a medida que el proyecto vaya avanzando. Los ficheros de configuración especifican los nombres de los campos y sus características. Un error de transcripción en el nombre de un campo o un desfase en las versiones usadas, podrían implicar problemas posteriores a la hora de integrar todos los datos extraídos.
 
-También deberíamos conocer los campos (nombres y significado) aceptados en la versión actual del proyecto. Posiblemente, algunos de estos campos puedan variar de nombre durante las distintas fases de desarrollo. Por ello, se ha contemplado  el versionado y la información dinámica. Podéis consultar la información relativa a los campos en la misma aplicación _autoNewsExtractorDev_ usando el script genérico `BoatFactExtractorCommand.[run|bat]` con los argumentos _field_info_ e _-i_ con una combinación cualquiera de las letras VDCA.
-V indica que queremos ver el nombre de la versión actual, D, la descripción de cada campo, C los cambios sufridos en los nombres de campos en las diferentes versiones y A sería equivalente a poner las 3 letras DCV. Por ejemplo, si ejecutamos:
+Para intentar reducir el problema, tanto los datos extraídos como las  configuraciones dispondrán  de un identificador de versiones. En los datos, el identificador, pude permitir hacer cambios automáticos de versiones, evitando tener que repetir procesos. En los ficheros de configuración, el identificador de versiones permitirá verificar que no se encuentra desfasado y que no contiene errores de transcripción de los nombres de campos.
+
+La aplicación _[jportada_boat_fact_extractor](https://github.com/portada-git/jportada_boat_fact_extractor)_ verificará siempre los ficheros de configuración de los extractores de datos antes de iniciar el proceso. En caso de encontrar un desfase o un nombre de campo erróneo, interrumpirá el proceso e informará con un mensaje en la consola  indicando la razón del problema. Además, la aplicación dispone de una opción para mostrar, de forma dinámica, la información de la última versión. 
+
+Se puede consultar la información relativa a los campos en la misma aplicación _autoNewsExtractorDev_ usando el script genérico `BoatFactExtractorCommand.[run|bat]` con los argumentos _field_info_ e _-i_ con una combinación cualquiera de las letras VDCA. V indica que queremos ver el nombre de la versión actual, D, la descripción de cada campo, C los cambios sufridos en los nombres de campos en las diferentes versiones y A sería equivalente a poner las 3 letras DCV. Por ejemplo, si ejecutamos:
 
 ```
 BoatFactExtractorCommand.run field_info -i DV
+
 ```
+
 obtendremos:
+
 ```
                  FIELD INFO                      
 ======================================================================
@@ -934,98 +941,32 @@ ship_forced_arrival:    Indication about the causes of the forced arrival
 ship_amount:    This field appears only in quantitative models where, instead of specifying the information for each ship, the number of vessels that have arrived or are about to arrive is indicated. Normally, it is a model specifically intended for cabotage transport.
 ----------------------------------------------------------------------
 ship_origin_area:    This field appears only in quantitative models where, instead of specifying information about each ship, the area of ​​origin or transport is used. Normally, it is a model specifically intended for cabotage transport.
-```
-Usar los nombres de campos vigentes es de suma importancia en un proyecto como PorTAda. Por ello,  deberemos extremar las precauciones. A fin de minimizar los errores, el proceso de extracción dispone de un verificador de versión y nombre de campos para los ficheros de configuración JSON, ya que pueden quedar obsoletos en un cambio de versión y no resulta fácil detectarlos. La verificación implica la comprobación de la versión indicada en el fichero, pero también los nombres de los campos usados. En caso de detectar alguna diferencia con la versión actual, el proceso se aborta y se avisa del problema con un mensaje en la consola.
 
-#### Análisis inicial del texto
-Otro aspecto importante que debemos hacer antes de comenzar a especificar la configuración del extractor consiste en analizar el patrón de texto usado en las noticias donde queremos realizar la extracción.  Las primeras características a analizar son las jerarquías del texto y sus patrones, la repetición de los mismos, la información heredada y la información implícita.
+```
+
+La información relativa a los cambios de versiones de muestra indicando el nombre actual, a la izquierda y el historial de cambios sufridos (a la derecha). El esquema usado es:
+
+```
+ List of changes made in each field throughout the different versions 
+======================================================================
+CURRENT NAME FIELD         <=         PREVIOUS NAME FIELDS            
+----------------------------------------------------------------------
+current_name_c1   <=  name_c1_version_1 <= name_c1_version_0
+current_name_c2 
+current_name_c3
+...
+current_name_cn  <= name_cn_version_0
+```
+
+
+### Análisis inicial del texto
+Otro aspecto importante que debemos tener en cuenta antes de comenzar a especificar la configuración del extractor, consiste en analizar el patrón de texto usado en las noticias.  Las primeras características a analizar son las jerarquías del texto y sus patrones, la repetición de los mismos, la información heredada y la información implícita.
 
 La información implícita se refiere a la información que no aparece en ninguna parte de la noticia, pero que debemos suministrar al modelo de datos. Por ejemplo, generalmente el puerto de llegada no suele aparecer como dato, pero necesitaos especificarlo, ya en el proyecto se trabaja con varios. La información implícita la añadiremos en forma de constante y usaremos el calculador "*DataFromConstantCalculator*" o "*DataFromConstantMapAndConfigKeyCalculator*" para asignar este valor al campo deseado.
 
-Para analizar las jerarquías, revisar el apartado [Relación jerárquica del contenido](#relaci%C3%B3n-jer%C3%A1rquica-del-contenido). Es necesario que detectemos, además de la relación de jerarquía, si esa estructura jerárquica se repite varias veces a lo largo de la sección o solo aparece una sola vez al inicio. Por ejemplo, en el Diario de Barcelona se dan los dos casos. En el inicio de la sección se informa del momento de la llegada. Pongamos por caso: "Embarcaciones llegadas anteayer". Esta información aparece únicamente una vez. Sin embargo, se informa de la bandera mediante un subtítulo y se repite varias veces para los barcos entrados de diferentes nacionalidades. Debajo de la bandera se van repitiendo las entradas de cada embarcación siguiendo un formato bien definido. Así pues, dispondremos de tres niveles jerárquicos, de las cuales el primero no se repite nunca.
+Para analizar las jerarquías, revisar el apartado [Relación jerárquica del contenido](#relaci%C3%B3n-jer%C3%A1rquica-del-contenido). Es necesario que detectemos, además de la relación de jerarquía, si esa estructura jerárquica se repite varias veces a lo largo de la sección o solo aparece una sola vez al inicio. Por ejemplo, en el Diario de Barcelona se dan los dos casos. En el inicio de la sección se informa del momento de la llegada. Pongamos por caso: "Embarcaciones llegadas anteayer". Esta información aparece únicamente una vez. Sin embargo, se informa de la bandera mediante un subtítulo y se repite varias veces para los barcos entrados de diferentes nacionalidades. Debajo de la bandera se van repitiendo las entradas de cada embarcación siguiendo un formato bien definido. Así pues, dispondremos de tres niveles jerárquicos, de las cuales el primero no se repite nunca. Esta característica nos permitirá usar solamente 2 extractores jerárquicos en lugar de 3 (revisad los apartados [Funcionamiento del extractor basado en expresiones regulares](#funcionamiento-del-extractor-basado-en-expresiones-regulares) y [Copia de datos en el mismo nivel](#copia-de-datos-en-el-mismo-nivel).
 
-Debemos entender el proceso de análisis basado en expresiones regulares como un proceso cíclico de búsqueda parcial del patrón textual  identificado por la expresión regular. Cada vez que se encuentra el patrón dentro del texto, se extrae la información  y acto seguido se sigue la búsqueda en el texto que queda por analizar hasta llegar al final. El extractor de la biblioteca _jportada_auto_news_extractor_lib_ lo que hace, es aprovechar este proceso para que, después de cada búsqueda, se almacene el texto analizado en el que no se ha encontrado el patrón buscado, par aplicar en él, una nueva búsqueda del extractor de siguiente nivel. 
 
-Veamos un ejemplo gráfico para ilustrarlo. Imaginemos que nuestro texto fuera como el gráfico de colores de la imagen y que la jerarquía, en lugar de ir de arriba a abajo, fuera de izquierda a derecha. Por tanto, la información de recuadro azul pertenecería a todo el texto (jerarquía más alta). Los recuadros morados representarían el segundo nivel de la jerarquía y los naranjas el tercero. Así, cada recuadro naranja, además de su información, debería tener también la que le corresponda de morado y la situada en el color azul.
 
-![Ejemplo de jerarquía con colores](media/jerarquiaColores.png) 
 
-Cuando el proceso de extracción de la aplicación comienza a procesar, se escoge el primer extractor de la jerarquía, el cual buscará todos los patrones azules existentes en el texto. Al encontrar el primero al inicio del texto, extrae la información y continua su búsqueda con el texto restante.  
-
-![Ejemplo de jerarquía con colores](media/jerarquiaColores2.png) 
-
-Al no haber más texto con el patrón azul, se reserva la información extraída y se cambia al extractor de segundo nivel, el cual detectará patrones morados. Encontrará el primero al inicio del texto analizado, extraerá la información y continuará buscando.
-
-![Ejemplo de jerarquía con colores](media/jerarquiaColores3.png) 
-
-Se encuentra el siguiente patrón morado, pero como no se encuentra al inicio del texto, se extrae su información (asociándola a la extraída del nivel anterior) y se reserva el texto donde no se ha encontrado nada, para realizar un análisis de tercer nivel cuando se acabe con el del segundo. Se sigue buscando.
-
-![Ejemplo de jerarquía con colores](media/jerarquiaColores4.png) 
-
-Se repite la operación con el siguiente patrón morado.
-
-![Ejemplo de jerarquía con colores](media/jerarquiaColores5.png) 
-
- Al no quedar más patrones morados se reserva el texto para el siguiente nivel.
-
-![Ejemplo de jerarquía con colores](media/jerarquiaColores6.png) 
-
-Al activar el analizador del tercer nivel (para buscar patrones naranjas), encuentra el primer texto al inicio, lo reserva y asocia a la información encontrada en niveles anteriores. La búsqueda sigue.
-
-![Ejemplo de jerarquía con colores](media/jerarquiaColores7.png) 
-
-Se repite la operación con el último texto reservado en el primer bloque de morados. La búsqueda continua con el segundo bloque de morados.
-
-![Ejemplo de jerarquía con colores](media/jerarquiaColores8.png) 
-
-El proceso se repite para cada bloque has conseguir la información completa de todos.
-
-![Ejemplo de jerarquía con colores](media/jerarquiaColores11.png) 
-
-Una vez explicado con más detalle el proceso de extracción, vamos a plantear otra solución para las jerarquías que no se repiten. La biblioteca _jportada_auto_news_extractor_lib_ permite forzar la copia de los campos que se indiquen, entre búsquedas de un mismo nivel jerárquico. En este tipo de noticias, los mensajes pueden ser bastante crípticos, debido a la necesidad de reducir el texto tanto como sea posible. Esto hace que, a veces, alguna información aparecida en anteriormente, se suponga implícita y no aparezca en la nueva entrada. No pasa siempre, pero puede darse el caso. También podemos aprovechar  esta característica para ahorrarnos la creación de un nivel de extracción cuando la información de un nivel superior no se repite nunca (aparece solamente una vez). Siguiendo con el ejemplo de colores, si al patrón de búsqueda de morados le añadimos una alternativa consistente en buscar azules y morados. Es decir,  
-```
-{##azules##}\n{##morados##}
-{##morados##}
-```
-Podemos conseguir la información de los azules desde el patrón morado evitando así la creación del extractor especifico de los azules. Enonces para que dicha información se extienda a todas las demás entradas moradas, se debe forzar una copia de los campos propiamente azules. 
-
-Por tanto, tenemos dos maneras válidas de tratar la información jerárquica que solo se aparece una vez o bien creamos un analizador específico que extraiga su información o bien la extraemos des de el analizador del nivel siguiente y forzamos su cópia.
-
-### Creación del fichero JSON
-El nombre del fichero se encuentra indicado en el atributo *parser_config_json_file* del archivo de configuración inicial de la aplicación (init.properties) y por defecto en el proyecto _PorTAda_ se encuentra en la ruta relativa *config/config_[IP]/extractor_config.json*, donde [IP] es el identificador de cada periódico (db, dm, lp, sm...) . Si se mantiene esta ruta podremos trabajar con los diferentes periódicos para hacer pruebas.
-
-Su contenido dependerá de cada periódico,  pero inicialmente debéis añadir, al menos, el nombre del modelo de extracción que hayáis decidido escribir en el artributo *parse_model*, por ejemplo, *boatdata* y su configuración, la cual inicialmente deberá tener, la versión actual de campos (boat_fact-00.00.00) y las constantes que consideréis (al menos la que os permita indicar el nombre de vuestro puerto). Por ejemplo, para el diario de Barcelona, pondríamos:
-
-```json
-{
-    "boatdata": {
-        "field_version": "boat_fact-00.00.00",
-        "constants": {"arrival_port": "Barcelona"}
-}
-````
-
-Seguidamente, debéis hacer la reflexión de cuantos niveles de jerarquía necesitaréis. Vamos a suponer que se requieran dos niveles. La clave config será un array con dos posiciones, una para cada nivel. En cada uno de los niveles se debe definir, el enfoque que en este caso deberá ser de tipo "_regex_" y la configuración propia del enfoque _regex_.
-
-```json
-{
-    "boatdata": {
-        "field_version": "boat_fact-00.00.00",
-        "constants": {"arrival_port": "Barcelona"}
-        "config":[
-	        {
-		        "approach_type": "regex",
-		        "configuration": {
-	                "configuración": "para el primer nivel"
-	          },
-	          {
-		          "approach_type": "regex",
-		          "configuration": {
-			          "configuración": "para el segundo nivel"
-		        }
-        ]
-    }
-}
-```
-
-Para cada nivel debeis encontrar que 
 
