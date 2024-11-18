@@ -965,11 +965,182 @@ current_name_cn  <= name_cn_version_0
 
 ### Uso de campos temporales y cálculo de campos definitivos
 
-[TO DO...]
+Existe la posibilidad que algunos campos no aparezcan directamente en las noticias a extraer, pero pueda deducirse a partir de algún otro.  Por ejemplo, en el Diario de Barcelona, no se indica nunca la fecha de llegada. Sin embargo, sí que se explicita una relación temporal de la llegada, relativa a la fecha de publicación. Ejemplo:
 
-#### Calculadores existentes
+_Embarcaciones llegadas el día de **ayer**
+..._
+
+El encabezamiento de la sección nos permite deducir la fecha de llegada, a partir de la fecha de la publicación y de la información relativa al momento de la llegada respecto a publicación ( ayer, hoy, anteayer, etc.).  
+
+También pude ocurrir que necesitemos un campo temporal para almacenar un cálculo intermedio. Por ejemplo, continuando con el ejemplo anterior, se puede decidir generar otro campo temporal con el valor de los días pasados desde la llegada de la embarcación hasta la fecha en que se publica la llegada. Esto es, si el título indica anteayer, habrán pasado 2 días. Si indica ayer, solo 1 día y si indicara hoy, 0 días. Con este dato, calculado, sería muy fácil obtener la fecha real de llegada. 
+
+Para tratar estos caso, necesitaremos extraer una información de forma temporal y aplicar un cierto cálculo, almacenar el cálculo como valor temporal y usarlo, finalmente, para deducir la fecha. La información extraída ("_momento relativo de la llegada_") deberá almacenarse con los datos extraídos para poder ser usada por el calculador específico. De forma parecida, los días pasados desde la llegada a hasta el día de la publicación también deberá almacenarse como información calculada.  Esto implica que deberemos asignar un nombre a cada dato en el fichero JSON. Al ser nombres de campos temporales no referenciados en el modelo de datos, la verificación del fichero fallaría si no se indicara explícitamente que se trata de valores temporales.  La verificación no comprueba los campos temporales. Se puede explicitar que un campo es temporal en la especificación del campo, ya sea de la sección de campos a extraer o ya sea en la sección de campos a calcular.  Siguiendo con el ejemplo del Diario de Barcelona:
+
+```json
+{
+    "boatdata.extractor": {
+       ...
+        "config": [
+            {
+                ...
+                "configuration": {                   
+                    "fields_to_extract": [
+                        {
+		                        "key": "time_of_arrival",
+                            "temporary_field": true
+                        },
+                        ...
+                    ],
+                    "fields_to_calculate": [
+                        {
+                            "key": "elapsed_days_from_arrival",
+                            "temporary_field": true,
+                            "calculator": "ElapsedTimeFromArrivalToPublicationCalculator",
+                            "fieldParams": ["extracted_data.time_of_arrival"],
+                        }
+                       ...
+                    ],
+                    ...
+                }
+            },
+            ...
+        ],
+        ...
+   }
+}
+```
+
+### Calculadores existentes
+Tanto en la biblioteca *[jportada_auto_news_extractor_lib](https://github.com/portada-git/jportada_auto_news_extractor_lib)*, como la aplicación  _[jportada_boat_fact_extractor](https://github.com/portada-git/jportada_boat_fact_extractor)_ tienen ya implementados un conjunto de calculadores se pueden especificar, sin más, en el fichero de configuración. Veamos los calculadores existentes:
+
+ - *DataFromConstantCalculator*: Este calculador devuelve el valor de la constante indicada en los parámetros de entrada. Requiere estar inicializado con el conjunto de valores constantes definidos en el archivo de configuración JSON (*extractor_config.json*). <br>Veamos un ejemplo, en un *parser_model* llamado extractor, se define una constante llamada *arrival_port*. Posteriormente, en la sección *configuration* de uno de sus extractores se especifica como uno de los campos a calcular (*fields_to_calculate*) el calculador  *DataFromConstantCalculator* la inicialización del cual (*init_data*) se debe realizar con las constantes definidas. Además, se le pasa como parámetro el nombre de la constante deseada como un dato literal ("*arrival_port*"). El valor devuelto por el calculador se asignará al campo llamado *ship_arrival_port*.
+ ```json
+{
+    "extractor": {
+        "field_version": "boat_fact-00.00.00",
+        "constants": {"arrival_port": "Barcelona"},
+        ...
+        "config":[
+            ...
+            {
+                ...
+                "configuration":{
+                    ...
+                    "fields_to_calculate": [
+                        ...
+                        {
+                            "calculator": "DataFromConstantCalculator",
+                            "init_data": ["constants"],
+                            "literalParams": ["arrival_port"],
+                            "key": "ship_arrival_port"
+                         }
+                         ...
+                    ]
+                    ...
+                }
+                ...
+            }
+            ...
+        ]
+        ...
+    }
+    ...
+}
+ ```
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;En este ejemplo, al campo *arrival_port* se le asignará el valor calculado "Barcelona".
+ 
+ - *DataFromConstantMapAndConfigKeyCalculator*: Este calculador es parecido al anterior, pero es específico para manejar constantes con valores compuestos. Recibe dos parámetros, el nombre de la constante con valores compuestos y el nombre del campo de los datos compuestos requerido para dvolver su valor. <br>Veamos un ejemplo, en un *parser_model* llamado extractor, se define una constante llamada *port_candidates* de tipo compuesto, con cuatro campos. Posteriormente, en la sección *configuration* de uno de sus extractores se especifica como uno de los campos a calcular (*fields_to_calculate*) el calculador  *DataFromConstantMapAndConfigKeyCalculator* la inicialización del cual (*init_data*) se debe realizar con las constantes definidas. Además, se le pasa como parámetro el nombre de la constante deseada como un dato literal ("*port_candidates*") y el nombre del campo extraído o calculado con anterioridad, del cual obtener el valor del segundo parámetro. El valor devuelto por el calculador se asignará al campo llamado *ship_arrival_port*.
+ ```json
+{
+    "extractor": {
+        "field_version": "boat_fact-00.00.00",
+        "constants": {
+            "arrival_port": "Barcelona",
+            "port_candidates":{
+                "BCN":"Barcelona",
+                "BUE": "Buenos Aires",
+                "HAV":"La Habana",
+                "MAR":"Marseille"
+            }
+        },
+        ...
+        "config":[
+            ...
+            {
+                ...
+                "configuration":{
+                    ...
+                    "fields_to_calculate": [
+                        ...
+                        {
+                            "calculator": "DataFromConstantMapAndConfigKeyCalculator",
+                            "init_data": ["constants"],
+                            "literalParams": ["port_candidates"],
+                            "field_params":["news_port"],
+                            "key": "ship_arrival_port"
+                         }
+                         ...
+                    ]
+                    ...
+                }
+                ...
+            }
+            ...
+        ]
+        ...
+    }
+    ...
+}
+ ```
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;En este ejemplo, al campo *arrival_port* se le asignará uno de los posibles valores dependiendo del valor encontrado en el campo *news_port*.
+ 
+ - *ReplaceIdemByValueCalculator*: Este calculador recibe 2 parámetros. El primero contiene el valor que se quiere analizar y el segundo el valor de sustitución en caso de que el valor de primer parámetro contenga un valor similar a "idem" o equivalente. Si el valor a chequear no coincide con "idem", devuelve su valor, pero si hay coincidencia, el valor devuelto es el del segundo parámetro.<br>En el siguiente ejemplo, se configura uno de los campos a calcular *ship_travel_time_unit*, usando el calculador *ReplaceIdemByValueCalculator*. Esta se inicializa con la configuración ("init_properties") y con el parser_id usado durante el proceso de extracción y cálculo. Además, recibe el valor del campo *ship_travel_time_unit* recien extraido, así como el valor que tuvo la última entrada extraída de forma completa.
+ ```json
+{
+    "extractor": {
+        "field_version": "boat_fact-00.00.00",
+        ...
+        "config":[
+            ...
+            {
+                ...
+                "configuration":{
+                    ...
+                    "fields_to_calculate": [
+                        ...
+                        {
+                            "calculator": "ReplaceIdemByValueCalculator",
+                            "init_data": [
+                                "configuration",
+                                "parser_id"
+                            ],
+                            "fieldParams": [
+                                "extracted_data.ship_travel_time_unit",
+                                "last_extracted_data.ship_travel_time_unit"
+                            ],
+                            "key": "ship_travel_time_unit"
+                         }
+                         ...
+                    ]
+                    ...
+                }
+                ...
+            }
+            ...
+        ]
+        ...
+    }
+    ...
+}
+ ```
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;Si el valor de  *ship_travel_time_unit* recién extraído es equivalente a "idem", se le asignará el valor de la última entrada. En caso contrario, se dejará con el valor original.
+
+ [TO DO ...]
 
 #### Creación de nuevos calculadores
+
+[TO DO ...]
+
 
 ### Análisis inicial del texto
 Otro aspecto importante que debemos tener en cuenta antes de comenzar a especificar la configuración del extractor, consiste en analizar el patrón de texto usado en las noticias.  Las primeras características a analizar son las jerarquías del texto y sus patrones, la repetición de los mismos, la información heredada y la información implícita.
