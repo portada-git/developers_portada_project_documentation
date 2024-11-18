@@ -951,6 +951,13 @@ current_name_c3
 current_name_cn  <= name_cn_version_0
 ```
 
+### Uso de campos temporales y cálculo de campos definitivos
+
+[TO DO...]
+
+#### Calculadores existentes
+
+#### Creación de nuevos calculadores
 
 ### Análisis inicial del texto
 Otro aspecto importante que debemos tener en cuenta antes de comenzar a especificar la configuración del extractor, consiste en analizar el patrón de texto usado en las noticias.  Las primeras características a analizar son las jerarquías del texto y sus patrones, la repetición de los mismos, la información heredada y la información implícita.
@@ -959,7 +966,14 @@ La información implícita se refiere a la información que no aparece en ningun
 
 Para analizar las jerarquías, revisar el apartado [Relación jerárquica del contenido](#relaci%C3%B3n-jer%C3%A1rquica-del-contenido). Es necesario que detectemos, además de la relación de jerarquía, si esa estructura jerárquica se repite varias veces a lo largo de la sección o solo aparece una sola vez al inicio. Por ejemplo, en el Diario de Barcelona se dan los dos casos. En el inicio de la sección se informa del momento de la llegada. Pongamos por caso: "Embarcaciones llegadas anteayer". Esta información aparece únicamente una vez. Sin embargo, se informa de la bandera mediante un subtítulo y se repite varias veces para los barcos entrados de diferentes nacionalidades. Debajo de la bandera se van repitiendo las entradas de cada embarcación siguiendo un formato bien definido. Así pues, dispondremos de tres niveles jerárquicos, de las cuales el primero no se repite nunca. Esta característica nos permitirá usar solamente 2 extractores jerárquicos en lugar de 3 (revisad los apartados [Funcionamiento del extractor basado en expresiones regulares](#funcionamiento-del-extractor-basado-en-expresiones-regulares) y [Copia de datos en el mismo nivel](#copia-de-datos-en-el-mismo-nivel).
 
+### Metodología de ensayo y error
 
+La complejidad de la configuración, la variabilidad en la redacción a lo largo del tiempo y las diferentes calidades  de texto obtenido de las transcripciones OCR, hacen muy aconsejable plantearse una metodología incremental y basada en el ensayo y error. 
 
+Por incremental, debemos entender se comienza con la mínima configuración (extracción de un único campo). Para ello se configura el fichero _init.properties, el JSON de extracción y se compone una expresión regular adaptada al patrón de la noticia, usando el sistema propio de la aplicación. Se va mejorando la expresión a base de ensayo y error con múltiples pruebas que abarquen una diversidad representativa del conjunto de noticias  hasta conseguir una calidad de extracción aceptable. Una vez conseguida, incrementaremos la extracción con dos campos y repetiremos el proceso de mejora. Uno a uno incrementaremos los campos a extraer hasta conseguir la extracción de todos los campos.
 
+#### Configuración mínima
 
+#### Expresiones regulares reutilizables como componentes
+
+### Ejemplo
