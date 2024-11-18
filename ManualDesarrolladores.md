@@ -24,7 +24,7 @@ Este formato nos permite determinar que todos los archivos de texto pertenecient
 
 Además, al tiempo que se realiza la unión, se consigue obtener información extra que no se encuentra en la noticia, objeto de nuestro análisis y posterior extracción. No referimos a los datos indicados en el nombre: Fecha del ejemplar, lugar de edición, nombre del periódico, edición del ejemplar y páginas de las que se realizará la extracción. Dicha información será incorporada, al resto de datos extraídos. 
 
-Por ello **es importante que los nombres de los archivos sigan el patrón descrito: `AAAA_MM_DD_PUE_NP_E_PG_BLOC.txt`, donde:
+Por ello, es importante que los nombres de los archivos sigan el patrón descrito `AAAA_MM_DD_PUE_NP_E_PG_BLOC.txt`, donde:
   - AAAA corresponde al año de edición,
   - MM al mes y
   - DD al día.
