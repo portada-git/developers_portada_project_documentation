@@ -1257,7 +1257,82 @@ La complejidad de la configuración, la variabilidad en la redacción a lo largo
 
 Por incremental, debemos entender se comienza con la mínima configuración (extracción de un único campo). Para ello se configura el fichero _init.properties, el JSON de extracción y se compone una expresión regular adaptada al patrón de la noticia, usando el sistema propio de la aplicación. Se va mejorando la expresión a base de ensayo y error con múltiples pruebas que abarquen una diversidad representativa del conjunto de noticias  hasta conseguir una calidad de extracción aceptable. Una vez conseguida, incrementaremos la extracción con dos campos y repetiremos el proceso de mejora. Uno a uno incrementaremos los campos a extraer hasta conseguir la extracción de todos los campos.
 
-#### Configuración mínima
+Para obtener la máxima información mientras se va implementando la configuración definitiva, podéis usar el atributo `run_for_debugging=yes`. Esta opción muestra por la consola las expresiones regulares usadas durante el proceso de extracción ("*Pattren (from regex_name)*"), así como el texto crudo ("*Raw text*") al que se ha procesado la búsqueda con la expresión regular, el fragmento  coincidente ("*Parsed text*"), el texto no coincidente que se reserva para el siguiente nivel de extracción ("*Unparsed text*") y los datos extraídos del fragmento coincidente ("*Extracted data*"). Ejemplo de salida durante una extracción con el atributo run_for_debugging activo:
+
+```
+Pattern (from flag): "(?:(?:^(.*(?:(?:E[mn]b.*[eo][s5])|(?:[EA][mn].{3,5}c[i¡Il1][oec]n[eosc]s)|(?:[EA]{2,3}barca.{2,4}nes)|(?:.{1,3}barc.{1,2}c[i¡Il1][oec]n[eosc].)|(?:.mbar.{1,3}c[i¡Il1][oec]n[eosc].)) (?:(?:(?:(?:[|i¡l][|i¡l])|(?:[UHN]))[eoa]g[aoeu]d..)|(?:.{4,6}adas)) .{2,7} p[uo][eo]rt[oe].*)\n+((?:(?:(?:(?:[MmNn]|(?:[ÚU]l?))[eco*][rft](?:(?:[ce][an][bnu][tl][eco*])|(?:ca[nbu][lt][lt]-)))[s5;}]?)|(?:M.r.ant[eoa][s5]?)|(?:.{1,3}rcant[aeo][s5]?)|(?:D. g[uo][aeo](?:(?:[rn][rn])|(?:m))[aeo])|(?:))) (.*)\.?$)|(?:^( )?((?:(?:(?:(?:[MmNn]|(?:[ÚU]l?))[eco*][rft](?:(?:[ce][an][bnu][tl][eco*])|(?:ca[nbu][lt][lt]-)))[s5;}]?)|(?:M.r.ant[eoa][s5]?)|(?:.{1,3}rcant[aeo][s5]?)|(?:D. g[uo][aeo](?:(?:[rn][rn])|(?:m))[aeo])|(?:))) (.*)\.?\n+)|(?:^( )?([iIl1][dD].{0,2}) ?(.{4,20})\.?\n+(?=De))|(?:^( )?([iIl1][dD].{0,2}) (.{4,15})\.?\n+)|(?:^( )?( )?([^\d\W]{5,15})\.?\n+))"
+
+--------------
+
+Raw text: "Embarcaciones llegadas al puerto en el dia de ayer.
+Mercantes españolas.
+De Christiansund en 33 d. bergantin F'ama, de 109 t., c. D. V. Ramon Rodriguez, con 5930 vog. bacalao y 200 de pezpalo á la orden. 
+De Almería y Aguilas en 15 d. laud Aguila, de 35 t., p. S. Lopez, con 130 gq. perdigon es á D. A. Sala, 50 id. á D. J. Margarit. 400 de plomo á D. J. Serratosa, 200 fanegas cebada á Don B. Solá y Amat, y 12 millares esparto á D. S. Garriga."
+
+--------------
+
+Parsed text: "Embarcaciones llegadas al puerto en el dia de ayer.
+Mercantes españolas."
+
+--------------
+
+Unparsed text: "De Christiansund en 33 d. bergantin F'ama, de 109 t., c. D. V. Ramon Rodriguez, con 5930 vog. bacalao y 200 de pezpalo á la orden. 
+De Almería y Aguilas en 15 d. laud Aguila, de 35 t., p. S. Lopez, con 130 gq. perdigon es á D. A. Sala, 50 id. á D. J. Margarit. 400 de plomo á D. J. Serratosa, 200 fanegas cebada á Don B. Solá y Amat, y 12 millares esparto á D. S. Garriga."
+
+--------------
+
+Extracted data:
+	 -Original field values:
+		 --time_of_arrival: Embarcaciones llegadas al puerto en el dia de ayer.
+		 --purposeType: Mercantes
+		 --ship_flag: españolas.
+	 -Calculated field values:
+		 --time_of_arrival: y
+		 --elapsed_days_from_arrival: 1
+
+
+
+--------------
+
+Parsed text: "Id. danesa."
+
+--------------
+
+Unparsed text: "De Calmau y Elseneur en 40 d. bergantin Terpsicore, de 132, t. c. P. N. Thave, con 286 docenas tablones de pino y 8 piezas arboladura á los Sres. Ortembach y C."
+
+--------------
+
+Extracted data:
+	 -Original field values:
+		 --time_of_arrival: 
+		 --purposeType: Id.
+		 --ship_flag: danesa.
+	 -Calculated field values:
+		 --time_of_arrival: y
+		 --elapsed_days_from_arrival: 1
+
+
+
+--------------
+
+Parsed text: "Mercante francesa."
+
+--------------
+
+Unparsed text: "De Marsella en 21 horas vapor Elba, de 210 t., c. S. Gabriel , con 69,000 francos á los señores Vidal y Cuadras hermanos, 83,000 id. á los señores Girona hermanos, Clavé y compañía , 23,000 id. D. J. M. Serra, 21,900 id. á los señores Serra y Parladé, 13.000 id. á D. B. Roca y Cortada, 15.000 id. á los señores Staguo, Torrens y compañia, 1500 id. á D. 1. Domenech, 3 cajas sangnijuclas á don B. Solá y Amat, otros efertos para esta, y 103 baltos de varios géneros de tránsito y 30 pasajeros, consignado á los señores Martorell y Bosill."
+
+--------------
+
+Extracted data:
+	 -Original field values:
+		 --time_of_arrival: 
+		 --purposeType: Mercante
+		 --ship_flag: francesa.
+	 -Calculated field values:
+		 --time_of_arrival: y
+		 --elapsed_days_from_arrival: 1
+
+```
 
 #### Expresiones regulares reutilizables como componentes
 
