@@ -1217,10 +1217,32 @@ Si el valor de  *ship_travel_time_unit* recién extraído es equivalente a "idem
 
 Podéis consultar  más información sobre los calculadores en los apartados [Sistema del proxy para las utilidades FieldCalculator](#sistema-del-proxy-para-las-utilidades-fieldcalculator) y [Configuración de cada nivel de extracción (](#configuraci%C3%B3n-de-cada-nivel-de-extracci%C3%B3n).
 
-#### Creación de nuevos calculadores
+### Creación de nuevos calculadores
+Es posible que al especificar algún extractor, necesitéis usar un tipo de cálculo todavía no implementado. Si eso ocurre, actualmente, la manera más fácil de hacerlo, es clonar el repositorio de esta aplicación codificada en JAVA desde _[jportada_boat_fact_extractor](https://github.com/portada-git/jportada_boat_fact_extractor)_ y crear una nueva clase en el paquete  "org.elsquatrecaps.autonewsextractor.dataextractor.calculators" con un nombre significativo que informe de su función. La clase debe heredar de AbstractCalculator o de RegexCalculator en función de si necesita usar alguna expresión regular compuesta con el sistema _regex_ (herencia de RegexCalculator) o no (herencia de AbstractCalculator).  La clase debe estar anotada por DataExtractorCalculatorMarkerAnnotation con un identificador único que permita distinguirlo de los demás. Si lo hacéis así, solamente deberéis implementar un único método llamado *calculate*. La mejor solución para evitar problemas de tipo y debido a que todos los campos extraídos, por defecto, son cadenas de carácter, es devolver siempre el valor en tipo texto. Para los parámetros, esperar un array de String es también una solución correcta. Podréis acceder a los datos iniciales especificados en el *extractor_config* usando el metodo `getInitData`al cual se le pase por parámetro en nombre de los datos de inicialización que encontraréis defindos en ExtraDataCalculatorEnum. Por ejemplo, si extractor_config ha especificado para este calculador la necesidad de pasar las constantes, obtendréis el valor de todas las constantes llamando a:
+`JSONObject constantes = getInitData(ExtraDataCalculatorEnum.CONSTANTS.toString());`
 
-[TO DO ...]
+Veamos a continuación como deberemos usar las anotaciones y la herencia en una clase nueva:
 
+```java
+@DataExtractorCalculatorMarkerAnnotation(id = "NewCalculator")
+public class NewCalculator extends AbstractCalculator<String[], String>{
+    public static final int PARAM_1=0;    
+    public static final int PARAM_2=1;
+    //...
+    //public static final int PARAM_N=???;
+    
+    @Override
+    public String calculate(String[] params){
+        String response = "";
+        //Ejemplo de obtención de la cosntantes
+        JSONObject constantes = getInitData(ExtraDataCalculatorEnum.CONSTANTS.toString());
+        //Codificar aquí el cálculo
+        
+        return response;
+    }		
+}
+```
+En el caso de que sea necesaria la implementación de calculadores, deberéis subir los cambios al repositorio para poderlo integrar todo. Mientras no se integre, podéis generar una compilación local y usar vuestro código local.
 
 ### Análisis inicial del texto
 Otro aspecto importante que debemos tener en cuenta antes de comenzar a especificar la configuración del extractor, consiste en analizar el patrón de texto usado en las noticias.  Las primeras características a analizar son las jerarquías del texto y sus patrones, la repetición de los mismos, la información heredada y la información implícita.
