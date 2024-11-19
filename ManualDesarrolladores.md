@@ -1327,13 +1327,13 @@ En general, diremos que una expresión como las que tenemos en el sistema _regex
 ```regex
 [UuDdTtCcSsOoNnQqVv](?:[^\d\W]{1,18})(?: +\w +[UuDdTtCcSsOoNnQqVv][^\d\W]{1,9})?
 ```
- no pude funcionar nunca de forma aislada, ya que se basa en criterios muy amplios y laxos como el hecho de empezar por ciertos caracteres, tener determinada medida, no contener dígitos, etc. Sin embargo, sí sabemos que en cierta posición de un patrón textual aparecerá seguro una cifra escrita en letras, conseguiremos que funcione casi siempre. Por ejemplo, Si sabemos que en la frase "Además, [CANTIDAD] buques de la costa ..." el concepto CANTIDAD  se expresa con letras, una composición como 
+ no pude funcionar nunca de forma aislada, ya que se basa en criterios muy amplios y laxos como el hecho de empezar por ciertos caracteres, tener determinada medida, no contener dígitos, etc. Sin embargo, si sabemos que en cierta posición de un patrón textual aparecerá una cifra escrita en letras, conseguiremos que funcione casi siempre. Por ejemplo, Si sabemos que en la frase "Además, [CANTIDAD] buques de la costa ..." el concepto CANTIDAD  se expresa con letras, una composición como 
 ```regex
 ^Adem.s[,.;] ({##acr_alfa_number##}) buques de la costa (.*)$
 ```
 funcionaría perfectamente. En cambio, esta otra no sería capaz de detectar el valor esperado. 
 ```regex
-^.*({##acr_alfa_number##})(.*)$
+^(.*)({##acr_alfa_number##})(.*)$
 ```
 No hace falta usar muletas excesivamente fuertes como las usadas en la primera expresión. Por ensayo y error podemos flexibilizarlas, hasta encontrar el grado de definición que maximice las coincidencias.
 
