@@ -1320,6 +1320,48 @@ Extracted data:
 
 ```
 
-#### Expresiones regulares reutilizables como componentes
+### Expresiones regulares reutilizables como componentes
+Antes de entrar en el detalle del uso de las diferentes expresiones componentes, debemos insistir que la mayoría de las expresiones reusables no sirven para detectar su cometido de forma aislada, sino que cumplen su misión en combinación con el resto de la expresión regular, la cual, en su conjunto se convierte en un patrón fuerte que evita errores de detección. El uso de expresiones largas nos permite definir patrones fuertes, pero a la vez flexibles, de manera que la detección y extracción de partes del texto pueda ser muy eficiente aun con OCR de calidad baja.
+
+En general, diremos que una expresión como las que tenemos en el sistema _regex_ necesitan muletas a ambos lados para llevar a cabo su cometido. Por ejemplo, una expresión como *ocr_alfa_number* que permite detectar números escritos en letra, presenta la forma:
+```regex
+[UuDdTtCcSsOoNnQqVv](?:[^\d\W]{1,18})(?: +\w +[UuDdTtCcSsOoNnQqVv][^\d\W]{1,9})?
+```
+ no pude funcionar nunca de forma aislada, ya que se basa en criterios muy amplios y laxos como el hecho de empezar por ciertos caracteres, tener determinada medida, no contener dígitos, etc. Sin embargo, sí sabemos que en cierta posición de un patrón textual aparecerá seguro una cifra escrita en letras, conseguiremos que funcione casi siempre. Por ejemplo, Si sabemos que en la frase "Además, [CANTIDAD] buques de la costa ..." el concepto CANTIDAD  se expresa con letras, una composición como 
+```regex
+^Adem.s[,.;] ({##acr_alfa_number##}) buques de la costa (.*)$
+```
+funcionaría perfectamente. En cambio, esta otra no sería capaz de detectar el valor esperado. 
+```regex
+^.*({##acr_alfa_number##})(.*)$
+```
+No hace falta usar muletas excesivamente fuertes como las usadas en la primera expresión. Por ensayo y error podemos flexibilizarlas, hasta encontrar el grado de definición que maximice las coincidencias.
+
+A continuación mostraremos las principales expresiones regulares genéricas para ser usadas como componentes de otras más específicas. 
+
+1. Generales
+	 - **idem**:  busca equivalencias de la palabra *"idem"*: (id., id, Id., idem, ...)
+	 - **ocr_alfa_number**:  Busca números escritos en letra como "Uno", "treinta y tres", "dieciocho", etc. con un criterio muy amplio. Necesita "muletas" a ambos lados para asegurar que en la posición debe haber una cifra escrita con letras.
+	 - **ocr_digit_little**: Versión corta del concepto dígito. Esta expresión amplia el concepto añadiendo ciertos caracteres parecidos, visualmente, a dígitos. La cantidad de caracteres añadidos no es muy grande, lo que evita confusiones. Es especialmente útil cuando el OCR tiene cierta calidad y cuando se detectan problemas con algunas otras versiones del mismo concepto, más extensas.
+	 - **ocr_digit_no_blanc**: Esta es una versión extensa del concepto dígito. Se aconseja usar de entrada y cambiar a la anterior, en caso de detectar problemas. 
+	 - **ocr_digit_plus_blanc**: En algunos OCR de muy mala calidad, algunas cifras pueden aparecer con algún dígito eliminado quedando un espacio en blanco entre dos dígitos, de manera que solo se detecta una parte de la cifra. Esta expresión añade un espacio en blanco y por tanto, es capaz de capturar toda la cifra entera. Debe usarse con cautela porque podría llevar a error. Es importante que se use con muletas que ayuden a detectar la posición de la búsqueda dentro del patrón y sobre todo, evitar aquellos casos donde pudieran existir dos cifras juntas. 
+	 - **ocr_capital_letter**: Esta expresión detecta letras mayúsculas con alguna ampliación como los caracteres *7*, *5*, *6* o */* . 
+	 - **personal_name**: detecta un nombre completo de persona (nombre y uno o dos apellidos). Admite nombres como: Juan Hernández de Arias, Ramón  Sánchez-Colomer de la Vega, Roberto di Sardo, etc.
+	 - **hyphen_proper_noun**:  Detecta un nombre propia. Se basa en detectar que la primera letra comienza por mayúscula, pero además admite dentro el nombre caracteres como el guion que aparece en algunos apellidos como "Sánchez-Colomer".
+2. Específicas de barcos
+	- **boat_fact_boat_type**: Pensada para detectar tipos de barcos de forma muy genérica. Necesita muletas. 
+	- **boat_fact_harbor**: Detecta nombres de puertos simples o compuestos junto con el listado de escalas si se describen (Cádiz, Cartagena y Valencia) o con expresiones propias de puertos como "Cadiz y su carrera".
+	- **boat_fact_in_addition**: Detecta varias formas de la palabra "*Además*" cuando se encuentra al inicio de un párrafo y, por tanto, comienza por mayúscula. Puede usarse como muleta de otras expresiones.
+	- **boat_fact_of_the_coast**: Detecta expresiones como "buques de la costa" con múltiples variantes. Se usa como muleta de otras expresiones. Aunque es específica del Diario de Barcelona, se ha dejado como expresión de barcos por si en algún otro periódico se repite la frase. En caso de que no se repita se pasará a la carpeta del Diario de Barcelona
+	- **boat_fact_vessel**: Busca el concepto barco/embarcación/buque/...
+	- **contains_anteayer**, **contains_ayer**, **contains_hoy**: Permite descubrir, dentro de una frase, la cual deba contener un espacio de tiempo o momento relativo, si e tiempo se refiere a hoy, ayer o anteayer.
+	- **embarcaciones**: Expresión muy flexible, pero fuerte para detectar la palabra embarcaciones. Puede usarse como muleta de otras expresiones.
+	- **is_page_number**: Detecta si un texto puede ser considerado como el número de página de una publicación. Básicamente, se usa para conseguir unir varias páginas sin ruido generado por la numeración de la página al inicio de final de la misma.
+	- **llegadas**: detecta la palabra llegadas de un modo muy flexible, pero suficientemente fuerte como para poderla usar como muleta de otras.
+	- **mercantes**: Detecta la palabra mercantes. Por su flexibilidad y fortaleza puede usarse como muleta.
+	- **ocr_digit**: Alias de ocr_digit_no_blanc.
+	- **puerto**: Muleta que detecta la palabra puerto.
+	- **start_with_idem**: Expresión específica para detectar el concepto idem de forma amplia, pero forzando que sea inicio de frase para poder usarse como muleta y detector de dato, a la vez.
+
 
 ### Ejemplo
