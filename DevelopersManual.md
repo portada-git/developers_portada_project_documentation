@@ -1356,115 +1356,47 @@ Extracted data:
 ```
 
 
-#### Reusable regular expressions as components
+### Reusable regular expressions as components
+Before going into the details of the use of the different component expressions, we must insist that most reusable expressions do not serve to detect their purpose in isolation, but rather they fulfill their mission in combination with the rest of the regular expression, which, as a whole, becomes a strong pattern that avoids detection errors. The use of long expressions allows us to define strong, but at the same time flexible, patterns, so that the detection and extraction of parts of the text can be very efficient even with low-quality OCR.
+
+In general, we will say that an expression like those we have in the _regex_ system needs crutches on both sides to carry out its task. For example, an expression like *ocr_alpha_number* that can detect numbers written in letters, has the form:
+```regex
+[UuDdTtCcSsOoNnQqVv](?:[^\d\W]{1,18})(?: +\w +[UuDdTtCcSsOoNnQqVv][^\d\W]{1,9})?
+```
+it can never work in isolation, since it is based on very broad and lax criteria such as starting with certain characters, having a certain length, not containing digits, etc. However, if we know that in a certain position of a text pattern a number written in letters will surely appear, we will get it to work almost always. For example, if we know that in the sentence "In addition, [QUANTITY] ships on the coast ..." the concept QUANTITY is expressed with letters, a composition like
+```regex
+^Adem.s[,.;] ({##acr_alfa_number##}) ships on the coast (.*)$
+```
+would work perfectly. On the other hand, this other one would not be able to detect the expected value.
+```regex
+^.*({##acr_alfa_number##})(.*)$
+```
+There is no need to use excessively strong crutches like those used in the first expression. By trial and error we can make them more flexible, until we find the degree of definition that maximizes the matches.
+
+Below we will show the main generic regular expressions to be used as components of more specific ones.
+
+1. General
+- **idem**: Searches for equivalents of the word *"idem"*: (id., id, Id., idem, ...)
+- **ocr_alfa_number**: Searches for numbers written in letters such as "One", "thirty-three", "eighteen", etc. with a very broad criterion. It needs "crutches" on both sides to ensure that there must be a number written in letters in the position.
+- **ocr_digit_little**: Short version of the digit concept. This expression expands the concept by adding certain characters that are visually similar to digits. The number of characters added is not very large, which avoids confusion. It is especially useful when the OCR has a certain quality and when problems are detected with some other, more extensive versions of the same concept.
+- **ocr_digit_no_blanc**: This is an extended version of the digit concept. It is advisable to use it as a starter and change to the previous one if problems are detected. - **ocr_digit_plus_blanc**: In some very poor quality OCRs, some numbers may appear with a digit removed, leaving a blank space between two digits, so that only part of the number is detected. This expression adds a blank space and is therefore able to capture the entire number. It should be used with caution because it could lead to errors. It is important that it is used with crutches that help detect the position of the search within the pattern and, above all, avoid those cases where two numbers could exist together.
+- **ocr_capital_letter**: This expression detects capital letters with some extension such as the characters *7*, *5*, *6* or */* .
+- **personal_name**: detects a person's full name (first name and one or two surnames). It allows names such as: Juan Hernández de Arias, Ramón Sánchez-Colomer de la Vega, Roberto di Sardo, etc.
+- **hyphen_proper_noun**: Detects a proper name. It is based on detecting that the first letter begins with a capital letter, but it also allows characters within the name such as the hyphen that appears in some surnames such as "Sánchez-Colomer".
+
+2. Specific to boats
+- **boat_fact_boat_type**: Designed to detect boat types in a very generic way. It needs crutches.
+- **boat_fact_harbor**: Detects names of simple or compound ports together with the list of stops if they are described (Cádiz, Cartagena and Valencia) or with expressions specific to ports such as "Cadiz and its career".
+- **boat_fact_in_addition**: Detects various forms of the word "*In addition*" when it is at the beginning of a paragraph and, therefore, begins with a capital letter. It can be used as a crutch for other expressions.
+- **boat_fact_of_the_coast**: Detects expressions such as "buques de la costa" with multiple variants. It is used as a crutch for other expressions. Although it is specific to the Diario de Barcelona, ​​it has been left as an expression for boats in case the phrase is repeated in some other newspaper. If it is not repeated, it will be moved to the Diario de Barcelona folder
+- **boat_fact_vessel**: Searches for the concept boat/boat/ship/...
+- **contains_anteayer**, **contains_ayer**, **contains_hoy**: Allows you to discover, within a sentence, which must contain a time space or relative moment, if the time refers to today, yesterday or the day before yesterday.
+- **embarcaciones**: Very flexible expression, but strong to detect the word boats. It can be used as a crutch for other expressions.
+- **is_page_number**: Detects if a text can be considered as the page number of a publication. Basically, it is used to join several pages without noise generated by the numbering of the page at the beginning and end of the same.
+- **arrivals**: Detects the word arrivals in a very flexible way, but strong enough to be able to use it as a crutch for others.
+- **mercantes**: Detects the word merchants. Due to its flexibility and strength, it can be used as a crutch.
+- **ocr_digit**: Alias ​​for ocr_digit_no_blanc.
+- **puerto**: Crutch that detects the word puerto.
+- **start_with_idem**: Specific expression to detect the concept idem in a broad way, but forcing it to be the start of a sentence so that it can be used as a crutch and data detector at the same time.
 
 ### Example
-
-----------------
-
-
-## Configuration and Testing of the _BoatFactExtractTest_ Utility
-
-This utility is used to test the data extraction process from text files containing vessel arrival and manifest news. It requires regular expressions and a JSON configuration file to define the extraction process.
-
-### Preparing Regular Expressions and Configuration
-
-You need to prepare:
-1. Regular expressions for extracting specific data fields.
-2. A JSON configuration file that defines the structure and settings of the extraction process.
-
-Refer to the section **[Configuring a Regex-Based Extractor](#configuring-a-regex-based-extractor)** for details on how to create these configurations.
-
-### Execution Arguments
-
-The following arguments are required for execution:
-- **`-c`**: Path to the initial configuration file. Example:  
-  `-c config/conf_db/init.properties`.
-- **`-d`**: Path to the directory containing input text files. Example:  
-  `-d data_db`.
-- **`-o`**: Base name (without extension) for the output JSON file. Example:  
-  `-o results/extracted_data`.
-
-### Testing Process
-
-1. Place sample text files in the source directory (`-d`).
-2. Verify the `init.properties` file includes paths to the necessary configuration files:
-   - Regular expressions.
-   - JSON extractor configuration file (`parser_config_json_file`).
-
-### Example Test Case
-
-Input file:
-```plaintext
-De Christiansund en 33 d. bergantín Fama, de 109 t., c. D. V. Ramón Rodríguez, con 5930 vogs bacalao y 200 de pez palo a la orden.
-
-```
-Expected JSON Output:
-
-{
-  "ship_name": "Fama",
-  "ship_type": "bergantín",
-  "ship_flag": "????",
-  "ship_tons": "109",
-  "ship_master_name": "Ramón Rodríguez",
-  "cargo_list": [
-    {
-      "cargo_type": "bacalao",
-      "cargo_quantity": "5930",
-      "cargo_unit": "vogs"
-    },
-    {
-      "cargo_type": "pez palo",
-      "cargo_quantity": "200",
-      "cargo_unit": ""
-    }
-  ]
-}
-
-Execution Example
-
-Run the script as follows:
-
-./BoatFactExtractTest.run -c config/conf_db/init.properties -d text_db -o results/extracted_data
-
-Integrating All Functionalities with BoatFactExtract
-
-Once each functionality (assembly, segmentation, and extraction) has been tested independently, you can integrate them into a single process using the _BoatFactExtract_ script.
-Execution Arguments
-
-This script requires the same arguments as the individual utilities:
-
-    -c: Path to the initial configuration file.
-    -d: Path to the directory containing input files.
-    -o: Base name for the output file containing the final results.
-
-Workflow
-
-The script performs the following:
-
-    Assembles text files into single units.
-    Segments the target fragment (vessel arrivals).
-    Extracts structured data and saves it as JSON.
-
-./BoatFactExtract.run -c config/conf_db/init.properties -d text_db -o results/final_output
-
-Generic Command Script: BoatFactExtractorCommand
-
-For flexibility, the _BoatFactExtractorCommand_ script allows executing any of the above functionalities by specifying an additional argument. This argument must be the first parameter and can take one of the following values:
-
-    information_unit_test for file assembly.
-    cut_test for fragment segmentation.
-    extract_test for data extraction.
-    extract for the full process.
-
-Execution Example
-
-
-To test the "Target Fragment Cutter":
-
-./BoatFactExtractorCommand.run cut_test -c config/conf_db/init.properties -d text_db -o results/segmented_fragments
-
-
-To execute the full process:
-
-./BoatFactExtractorCommand.run extract -c config/conf_db/init.properties -d text_db -o results/final_results
