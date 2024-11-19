@@ -373,7 +373,8 @@ Para cada campo a calcular (ítem de fields_to_calculate), deberá indicarse:
 ##### Ejemplo de configuración completo
  
  Sirva de ilustración de lo descrito, el siguiente ejemplo de una configuración completa:
- ```json
+ 
+```json
  {
     "boatdata.extractor": {
         "field_version": "boat_fact-00.00.00",
@@ -684,7 +685,7 @@ En el directorio fuente colocar ficheros de texto con nombres que sigan el patr�
 
 Argumentos de la ejecución:
 
- - **-c**: indicará el nombre y ubicación del fichero de configuración inicial. Per  ejemplo: `-c config/conf_db/init.properties`
+ - **-c**: indicará el nombre y ubicación del fichero de configuración inicial. Por  ejemplo: `-c config/conf_db/init.properties`
  - **-d**: debe contener la ruta del directorio donde se encuentran los ficheros de texto a tratar. Ejemplo: `-d data_db`
  - **-o**: indica la ruta del directorio de salida donde se desea escribir los ficheros resultantes. Los ficheros de la entrada que no respondan al patrón esperado no se copiaran a la salida. Los ficheros con la misma fecha, periódico y edición, pero con distintas páginas o bloques, se unirán en uno solo con el nombre del fichero de página y bloque inferior, seguido del sufijo "__informationUnit_". Si no hay dos o más ficheros coincidentes, pero cumple el patrón esperado, se copiará al directorio de salida añadiendo el mismo sufijo. 
  
@@ -751,9 +752,9 @@ Una noticia tipo sería:
 	Bergantin español Wifredo, c. D. J. Ferrer, para Valparaiso con vino, pimenton y bacalao. ...
 
 Nuestra propuesta de expresión regular inicial sería:
-````
+```
 ^(.*?\nSANIDAD DEL PUERTO)\n(.*?)\n(.*)$
-````
+```
 Es decir, Todo el texto desde el inicio hasta 'SANIDAD DEL PUERTO' cuando esta frase se encuentra en mayúsculas después de un salto de línea (ya que es un título), se encierra en un primer grupo. La siguiente línea (correspondiente al subtítulo) la capturaremos como grupo 2, y el resto de texto hasta el final del texto, será capturado como grupo 3.
 
 Para que la expresión regular no se analice línea a línea, será necesario indicarlo con las opciones  `gsuU` (análisis global -g-, considerando todo el texto como un todo -s- y forzando la aceptación de caracteres unicode).
@@ -1037,7 +1038,7 @@ En este ejemplo, al campo *arrival_port* se le asignará el valor calculado "Bar
  </dd></dl>
  
  - *DataFromConstantMapAndConfigKeyCalculator*: Este calculador es parecido al anterior, pero es específico para manejar constantes con valores compuestos. Recibe dos parámetros, el nombre de la constante con valores compuestos y el nombre del campo de los datos compuestos requerido para dvolver su valor. <br>Veamos un ejemplo, en un *parser_model* llamado extractor, se define una constante llamada *port_candidates* de tipo compuesto, con cuatro campos. Posteriormente, en la sección *configuration* de uno de sus extractores se especifica como uno de los campos a calcular (*fields_to_calculate*) el calculador  *DataFromConstantMapAndConfigKeyCalculator* la inicialización del cual (*init_data*) se debe realizar con las constantes definidas. Además, se le pasa como parámetro el nombre de la constante deseada como un dato literal ("*port_candidates*") y el nombre del campo extraído o calculado con anterioridad, del cual obtener el valor del segundo parámetro. El valor devuelto por el calculador se asignará al campo llamado *ship_arrival_port*.
- ```json
+```json
 {
     "extractor": {
         "field_version": "boat_fact-00.00.00",
@@ -1078,13 +1079,14 @@ En este ejemplo, al campo *arrival_port* se le asignará el valor calculado "Bar
     }
     ...
 }
- ```
+```
+ 
  <dl><dd>
 En este ejemplo, al campo *arrival_port* se le asignará uno de los posibles valores dependiendo del valor encontrado en el campo *news_port*.
  </dd></dl>
  
  - *ReplaceIdemByValueCalculator*: Este calculador recibe 2 parámetros. El primero contiene el valor que se quiere analizar y el segundo el valor de sustitución en caso de que el valor de primer parámetro contenga un valor similar a "idem" o equivalente. Si el valor a chequear no coincide con "idem", devuelve su valor, pero si hay coincidencia, el valor devuelto es el del segundo parámetro.<br>En el siguiente ejemplo, se configura uno de los campos a calcular *ship_travel_time_unit*, usando el calculador *ReplaceIdemByValueCalculator*. Esta se inicializa con la configuración ("init_properties") y con el parser_id usado durante el proceso de extracción y cálculo. Además, recibe el valor del campo *ship_travel_time_unit* recién extraído, así como el valor que tuvo la última entrada extraída de forma completa. 
- ```json
+```json
 {
     "extractor": {
         "field_version": "boat_fact-00.00.00",
@@ -1121,14 +1123,14 @@ En este ejemplo, al campo *arrival_port* se le asignará uno de los posibles val
     }
     ...
 }
- ```
+```
  
  <dl><dd>
 Si el valor de  *ship_travel_time_unit* recién extraído es equivalente a "idem", se le asignará el valor de la última entrada. En caso contrario, se dejará con el valor original.
  </dd></dl>
  
  - *TimeOfArrivalRelativeToPublicationCalculator*: Este calculador analiza un texto el cual contenga "*hoy*", "*ayer*", "*anteayer*" o equivalentes y devuelve un identificador unívoco para cada uno de ellos. Con una palabra equivalente a ayer devolverá "y" correspondiente al concepto "yesterday", con una equivalente a anteayer devolverá "b" correspondiente a "before yesterday", etc. Este calculador requiere inicializarse con la configuración (init.properties) y el parser_id a procesar. Recibe un único parámetro con el texto conteniendo hoy, ayer, anteayer, etc.<br>Vemos un ejemplo en el  que se quiere cambiar  el valor extraído como  *time_of_arrival* reemplazándolo por su identificador temporal según su contenido. 
- ```json
+```json
 {
     "extractor": {
         "field_version": "boat_fact-00.00.00",
@@ -1163,10 +1165,10 @@ Si el valor de  *ship_travel_time_unit* recién extraído es equivalente a "idem
     }
     ...
 }
- ```
+```
  
  - *ElapsedTimeFromArrivalToPublicationCalculator*: Calcula el número de días transcurridos en función del identificador de un valor temporal relativo (ayer, hoy, anteayer). No necesita datos iniciales y solo recibe, como único parámetro, el identificador del valor temporal.
- ```json
+```json
 {
                         ...
                         {
@@ -1176,14 +1178,14 @@ Si el valor de  *ship_travel_time_unit* recién extraído es equivalente a "idem
                             "key": "elapsed_days_from_arrival"
                         }
                          ...
- ```
+```
  
  - *PreviousDateFromElapsedTimeCalculator*: Este calculador no necesita datos iniciales. Su objetivo es calcular una fecha previa a partir de valor numérico de tiempo expresado en días o en horas y una fecha concreta pasada como cadena de caracteres en un formato definido. El calculador recibe 4 parámetros: 
 	 - Un valor numérico que indica el tiempo transcurrido
 	 - Un valor indicando la unidad de tiempo. Si comienza por *h* se consideran horas, si lo hace por *d* se consideran días. 
 	 - La fecha a partir de la que se debe hacer el cálculo en un formato específico como cadena de caracteres.
 	 - El formato con el que la fecha se expresa. Este parámetro es opcional. Si el formato de la fecha es yyyy-MM-dd, no es necesario este parámetro. En caso contrario debe especificarse el formato. Ejemplo:
- ```json
+```json
 {
                         ...
                         {
@@ -1197,7 +1199,7 @@ Si el valor de  *ship_travel_time_unit* recién extraído es equivalente a "idem
                             "key": "ship_departure_date"
                         }
                          ...
- ```
+```
 
 Podéis consultar  más información sobre los calculadores en los apartados [Sistema del proxy para las utilidades FieldCalculator](#sistema-del-proxy-para-las-utilidades-fieldcalculator) y [Configuración de cada nivel de extracción (](#configuraci%C3%B3n-de-cada-nivel-de-extracci%C3%B3n).
 
