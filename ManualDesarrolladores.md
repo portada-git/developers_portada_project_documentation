@@ -3,6 +3,10 @@
 <h2>Manual para desarrolladores: Extracción de información de noticias en el contexto del proyecto portada</h2>
 </div>
 
+# Últimas novedades
+Se ha actualizado la versión de los nombres de campos a extraer, de acuerdo a las últimas decisiones tomadas. Además, se ha implementado un sistema automático para actualizar los ficheros JSON de configuración. Este actualizador de versiones adapta los nombres de campos antiguos a las nuevas nomenclaturas, en todos los casos, tanto en referencia a los campos de extracción, como a los campos calculados e incluso a los parámetros recibidos por los procesos de cálculo a excepción de aquellos procesos que reciban un nombre de campo usando el tipo de parámetro _literalParams_. La razón de esto, es que este tipo de parámetros sirven para enviar cualquier tipo de dato y no es posible saber _a priori_ si el dato es o no es un nombre de campo. 
+Para evitar problemas posteriores se ha añadido un nuevo tipo de parámetro que permite indicar, además del valor, la categoría a la que pertenece el parámetro. En este momento se aceptan 3 categorias: _fieldName_ para indicar que el valor es el nombre de un campo, _fieldValue_ para indicar que el campo contenido en el parámetro debe convertirse a valor antes de ejecutar el cálculo y _literal_ para mandar cualquier otro valor. De este modo, los procesos automáticos de actualización podrán reconocer y cambiar cualquier actualización referida a un nombre de campo. 
+
 # Manual para desarrolladores
 
 Este manual se ha creado básicamente para ayudar a los desarrolladores del proyecto **_PorTAda_** a crear los archivos de configuración necesarios para que las aplicaciones PAPI y PAPCLI puedan extraer los datos referentes a las embarcaciones llegadas a los diferentes puertos de estudio referenciadas en los periódicos utilizados como fuentes en el contexto del proyecto portada. 
