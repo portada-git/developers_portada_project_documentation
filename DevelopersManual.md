@@ -58,38 +58,49 @@ This feature extracts and classifies information from the target text into prede
 - __publication_date__: Displays the date of the newspaper
 - __publication_name__: Displays the name of the newspaper
 - __publication_edition__: Indicates the edition of the newspaper in case there is more than one a day: M for morning, T for afternoon or N for night. In case there is only one edition the value will be U (unique).
-- __fact_type__: It is the type of news that is analyzed. It can take values ​​such as E for ship entries or M for discharge manifests.
-- __ship_departure_port__: Indicates the port of departure of the ship on this voyage
-- __ship_arrival_port__: Indicates the port of arrival (Marseille, Buenos Aires, Havana or Barcelona) of the ship on this voyage. In most cases, this information is not reported in the news and is implicitly deduced from the newspaper
-- __ship_departure_date__: Indicates the date of departure of the ship from the port of departure
-- __ship_arrival_date__: Indicates the date on which the ship arrived at the port of arrival (Marseille, Buenos Aires, Havana or Barcelona)
-- __travel_arrival_moment_value__: Indicates the time of arrival at the port. It can be expressed as arrival time or as a longer period (morning, afternoon, evening, ...)
-- __ship_travel_time__: Indicates the time that the ship was travelling from the port of departure to the port of arrival days or hours
-- __ship_travel_time_unit__: Indicates the time unit in which the duration is expressed.
-- __ship_port_of_call_list__: Indicates the list of ports (and optionally more information such as arrival or departure dates) in which the ship had called during its journey to the port of arrival. If the information in this list is only the name of the ports, the list will be composed of port names separated by commas. Otherwise, each port of call information will be enclosed in square brackets separated, also by commas, and within each of them the following will be specified, if possible: the name of the port, the date of arrival at that port and the date of departure (according to the 3 fields below). 
-- __ship_port_of_call_place__: Displays the port name of an item in the port of call list
-- __ship_port_of_call_arrival_date__: Displays the arrival date of an item in the port of call list
-- __ship_port_of_call_departure_date__: Displays the departure date of an item in the port of call list
+- __news_section__: It is the type of news that is analyzed. It can take values ​​such as E for ship entries or M for discharge manifests.
+- __travel_departure_port__: Indicates the port of departure of the ship on this voyage
+- __travel_arrival_port__: Indicates the port of arrival (Marseille, Buenos Aires, Havana or Barcelona) of the ship on this voyage. In most cases, this information is not reported in the news and is implicitly deduced from the newspaper
+- __travel_departure_date__: Indicates the date of departure of the ship from the port of departure
+- __travel_arrival_date__: Indicates the date on which the ship arrived at the port of arrival (Marseille, Buenos Aires, Havana or Barcelona)
+- __travel_arrival_moment__: Indicates the time of arrival at the port. It can be expressed as arrival time or as a longer period (morning, afternoon, evening, ...)
+- __travel_duration_value__: Indicates the time that the ship was travelling from the port of departure to the port of arrival days or hours
+- __travel_duration_unit__: Indicates the time unit in which the duration is expressed.
+- __travel_port_of_call_list__: Indicates the list of ports (and optionally more information such as arrival or departure dates) in which the ship had called during its journey to the port of arrival. If the information in this list is only the name of the ports, the list will be composed of port names separated by commas. Otherwise, each port of call information will be enclosed in square brackets separated, also by commas, and within each of them the following will be specified, if possible: the name of the port, the date of arrival at that port and the date of departure (according to the 3 fields below). 
+- __port_of_call_place__: Displays the port name of an item in the port of call list
+- __port_of_call_arrival_date__: Displays the arrival date of an item in the port of call list
+- __port_of_call_departure_date__: Displays the departure date of an item in the port of call list
 - __ship_type__: Describes the type of ship (brig, schooner, steamer, etc.) mentioned in the newspaper
 - __ship_flag__: Refers to the name of the country or region of the flag of the ship described by the newspaper
 - __ship_name__: Indicates the name of the ship which is usually presented in full, as mentioned in the newspaper source
-- __ship_tons__: Specifies the ship's capacity in tons presented as a numeric value with the unit of measurement. For ships, this is always the same, as it refers to the ship's tonnage. This information is usually given with abbreviations such as "ton." or "t."
-- __ship_master_role__: This refers to the category of the person who commands the ship. This can be captain or skipper, although in some cases it also appears as pilot. The abbreviations used to designate them are usually “c” and “p”, respectively
-- __ship_master_name__: This is the nominal identification of the person who commands the ship. It can appear in various forms, at least with the surname, preceded by his position (role). It indicates the surname of the ship's captain, often preceded by “cap.” or “c.”
-- __ship_agent__: This information can indicate both the ship's agent, that is, the person who is in charge of the transactions and operation of the ship, and the shipowner, that is, the person who owns the ship or part of it. Sometimes it can also refer to the shipowner
-- __ship_crew__: This is the numerical value of the ship's crew.
-- __ship_cargo_list__: This is the description of the list containing information on all cargo transported by the incoming vessel (type of cargo, quantity, person receiving the cargo, if any, or “to order” otherwise, etc.). Initially, it will be shown as a comma-separated textual description, but in a second phase, each commodity will be broken down into the following 6 fields.
-- __cargo_merchant__: This is the person to whom the cargo was destined, often the merchant who had bought it and who took charge of it at the time of unloading. It indicates the recipient of the cargo, with occasional mention of “divers”.
+- __ship_tons_capacity__: Specifies the ship's capacity in tons presented as a numeric value with the unit of measurement. For ships, this is always the same, as it refers to the ship's tonnage. This information is usually given with abbreviations such as "ton." or "t."
+- __ship_tons_unit__: Referred to the unit of the ship's tonnage. Usually given with abbreviations such as "ton." or "t."
+- __master_role__: This refers to the category of the person who commands the ship. This can be captain or skipper, although in some cases it also appears as pilot. The abbreviations used to designate them are usually “c” and “p”, respectively
+- __master_name__: This is the nominal identification of the person who commands the ship. It can appear in various forms, at least with the surname, preceded by his position (role). It indicates the surname of the ship's captain, often preceded by “cap.” or “c.”
+- __ship_agent_name__: This information can indicate both the ship's agent, that is, the person who is in charge of the transactions and operation of the ship, and the shipowner, that is, the person who owns the ship or part of it. Sometimes it can also refer to the shipowner
+- __crew_number__: This is the numerical value of the ship's crew.
+- __cargo_list__: This is the description of the list containing information on all cargo transported by the incoming vessel (type of cargo, quantity, person receiving the cargo, if any, or “to order” otherwise, etc.). Initially, it will be shown as a comma-separated textual description, but in a second phase, each commodity will be broken down into the following 6 fields.
+- __cargo_merchant_name__: This is the person to whom the cargo was destined, often the merchant who had bought it and who took charge of it at the time of unloading. It indicates the recipient of the cargo, with occasional mention of “divers”.
 In this case we see names of people or companies. These names have the same characteristics and difficulties as the rest of the names. Sometimes the ships arrived fully loaded and were destined for the same person, and in other cases, each cargo had its recipient. The expression “a la orden” also frequently appears, which in principle is a cargo to be sold upon arrival at port and which, on the contrary, has no previous owner, beyond the captain himself personally or on behalf of someone.
-- __cargo_type__: It expresses the products or types of merchandise that have arrived. It is a very variable value, the most common merchandise being coal or cotton, but there is an extraordinary diversity of products that arrive at the port.
-- __cargo_value__: Numeric expression of the amount of the cargo
+- __cargo_commodity__: It expresses the products or types of merchandise that have arrived. It is a very variable value, the most common merchandise being coal or cotton, but there is an extraordinary diversity of products that arrive at the port.
+- __cargo_quantity__: Numeric expression of the amount of the cargo
 - __cargo_unit__: Expresses the units in which the cargo appears. These can be units of weight, volume, counts or units related to packaging.
-- __cargo_origin__: Port of origin of the cargo
-- __cargo_destination__: Port of destination of the cargo
-- __ship_quarantine__: Information regarding special conditions of arrival due to health circumstances.
-- __ship_forced_arrival__: Indication of the causes of forced arrival
+- __cargo_port_origin__: Port of origin of the cargo
+- __cargo_port_destination__: Port of destination of the cargo
+- __quarantine__: Information regarding special conditions of arrival due to health circumstances.
+- __forced_arrival__: Indication of the causes of forced arrival
 - __ship_amount__: This field appears only in quantitative models where, instead of specifying the information for each vessel, the number of vessels that have arrived or are about to arrive is indicated. Normally, this is a model specifically designed for cabotage transport.
 - __ship_origin_area__: This field appears only in quantitative models where, instead of specifying information for each vessel, the origin or transport area is used. Normally, this is a model specifically intended for cabotage transport.
+- __info_ship_type__: [TO DO]
+- __info_ship_name__: [TO DO]
+- __info_master_role__: [TO DO]
+- __info_master_name__: [TO DO]
+- __info_meeting_place__: [TO DO]
+- __info_meeting_date__: [TO DO]
+- __info_port_deparure__: [TO DO]
+- __cargo_info_departure_date__: [TO DO]
+- __info_port_destination__: [TO DO]
+- __info_behind__: [TO DO]
 
 Two methodological approaches are available for extraction:
 1. **Regex-based**: Built on regular expressions, with components defined in the library.
