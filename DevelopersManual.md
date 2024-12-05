@@ -3,6 +3,11 @@
 <h2>Developer Manual: Extracting Information from News Articles for the PortAda Project</h2>
 </div>
 
+# Latest news
+The version of the names of fields to be extracted has been updated, according to the latest decisions taken. In addition, an automatic system has been implemented to update the configuration JSON files. This version updater adapts the names of old fields to the new nomenclatures, in all cases, both in reference to the extraction fields, as well as to the calculated fields and even to the parameters received by the calculation processes, except for those processes that receive a field name using the parameter type _literalParams_. The reason for this is that this type of parameter is used to send any type of data and it is not possible to know _a priori_ if the data is or is not a field name.
+To avoid later problems, a new type of parameter has been added that allows indicating, in addition to the value, the category to which the parameter belongs. Currently, 3 categories are accepted: _fieldName_ to indicate that the value is the name of a field, _fieldValue_ to indicate that the field contained in the parameter must be converted to a value before executing the calculation, and _literal_ to send any other value. This way, automatic update processes will be able to recognize and change any update referring to a field name.
+
+
 # Developer Manual
 
 This manual is designed to assist developers in the **_PortAda_** project in creating the necessary configuration files for the **PAPI** and **PAPCLI** applications. These files enable data extraction related to vessels arriving at the different ports studied, as referenced in the newspapers used as sources for the project.
