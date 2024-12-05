@@ -52,38 +52,49 @@ La última de las funcionalidades tiene como objetivo extraer los datos contenid
  - __publication_date__: Muestra la fecha del periódico
  - __publication_name__: Muestra el nombre del periódico
  - __publication_edition__: Indica la edición del periódico en caso de que haya más de una al día: M para mañana, T para tarde o N para noche. En caso de que haya una sola edición el valor será U (única).
- - __fact_type__: Es el tipo de noticia que se analiza. Puede tomar valores como E para entradas de buques o M para manifiestos de descarga.
- - __ship_departure_port__: Indica el puerto de salida del buque en este viaje
- - __ship_arrival_port__: Indica el puerto de llegada (Marsella, Buenos Aires, La Habana o Barcelona) del buque en este viaje. En la mayoría de los casos, esta información no aparece en las noticias y se deduce implícitamente según el periódico
- - __ship_departure_date__: Indica la fecha de salida del barco del puerto de salida
- - __ship_arrival_date__: Indica la fecha en la que el barco llegó al puerto de llegada (Marsella, Buenos Aires, La Habana o Barcelona)
- - __travel_arrival_moment_value__: Indica la hora de llegada al puerto. Puede expresarse como hora de llegada o como un periodo más amplio (mañana, tarde, noche, ...)
- - __ship_travel_time__: Indica el tiempo que el barco estuvo viajando desde el puerto de salida al puerto de llegada días u horas
- - __ship_travel_time_unit__: Indica la unidad de tiempo en la que se expresa la duración.
- - __ship_port_of_call_list__: Indica la lista de puertos (y opcionalmente más información como fechas de llegada o salida) en los que el barco había hecho escala durante su trayecto al puerto de llegada. Si la información de esta lista es solo el nombre de los puertos, la lista estará compuesta por nombres de puertos separados por comas. En caso contrario, cada información de escala se encerrará entre paréntesis cuadrados separados, también por comas, y dentro de cada uno de ellos se especificaran si fuera posible: el nombre del puerto, la fecha de llegada a ese puerto y la fecha de salida (de acuerdo a los 3 campos siguientes). 
- - __ship_port_of_call_place__: Muestra el nombre del puerto de un elemento de la lista de puertos de escala
- - __ship_port_of_call_arrival_date__: Muestra la fecha de llegada de un elemento de la lista de puertos de escala
- - __ship_port_of_call_departure_date__: Muestra la fecha de salida de un elemento de la lista de puertos de escala
+ - __news_section__: Es el tipo de noticia que se analiza. Puede tomar valores como E para entradas de buques o M para manifiestos de descarga.
+ - __travel_departure_port__: Indica el puerto de salida del buque en este viaje
+ - __travel_arrival_port__: Indica el puerto de llegada (Marsella, Buenos Aires, La Habana o Barcelona) del buque en este viaje. En la mayoría de los casos, esta información no aparece en las noticias y se deduce implícitamente según el periódico
+ - __travel_departure_date__: Indica la fecha de salida del barco del puerto de salida
+ - __travel_arrival_date__: Indica la fecha en la que el barco llegó al puerto de llegada (Marsella, Buenos Aires, La Habana o Barcelona)
+ - __travel_arrival_moment__: Indica la hora de llegada al puerto. Puede expresarse como hora de llegada o como un periodo más amplio (mañana, tarde, noche, ...)
+ - __travel_duration_value__: Indica el tiempo que el barco estuvo viajando desde el puerto de salida al puerto de llegada días u horas
+ - __travel_duration_unit__: Indica la unidad de tiempo en la que se expresa la duración.
+ - __travel_port_of_call_list__: Indica la lista de puertos (y opcionalmente más información como fechas de llegada o salida) en los que el barco había hecho escala durante su trayecto al puerto de llegada. Si la información de esta lista es solo el nombre de los puertos, la lista estará compuesta por nombres de puertos separados por comas. En caso contrario, cada información de escala se encerrará entre paréntesis cuadrados separados, también por comas, y dentro de cada uno de ellos se especificaran si fuera posible: el nombre del puerto, la fecha de llegada a ese puerto y la fecha de salida (de acuerdo a los 3 campos siguientes). 
+ - __port_of_call_place__: Muestra el nombre del puerto de un elemento de la lista de puertos de escala
+ - __port_of_call_arrival_date__: Muestra la fecha de llegada de un elemento de la lista de puertos de escala
+ - __port_of_call_departure_date__: Muestra la fecha de salida de un elemento de la lista de puertos de escala
  - __ship_type__: Describe el tipo de barco (bergantín, goleta,  vapor, etc.) que menciona el periódico
  - __ship_flag__: Hace referencia al nombre del país o región de la bandera del barco descrito por el periódico
  - __ship_name__: Indica el nombre del barco que normalmente se presenta completo, como se menciona en la fuente del periódico
- - __ship_tons__: Especifica la capacidad del barco en toneladas presentada como un valor numérico con la unidad de medida. En el caso de los barcos, esto siempre es lo mismo, ya que se refiere al tonelaje del buque. Este dato se da normalmente con abreviaturas como "ton." o "t."
- - __ship_master_role__: Hace referencia a la categoría de la persona que comanda el buque. Puede ser capitán o patrón, aunque en algunos casos también aparece piloto. Las abreviaturas que se utilizan para designarlos suelen ser “c” y “p”, respectivamente
- - __ship_master_name__: Es la identificación nominal de la persona que comanda el buque. Puede aparecer de varias formas, al menos lleva el apellido, precedido de su cargo (rol). Indica el apellido del capitán del buque, a menudo precedido de “cap.” o “c.”
- - __ship_agent__: Esta información puede indicar tanto el agente del buque, es decir, la persona que se encarga de las transacciones y la operación del buque, como el armador, es decir, la persona que es propietaria del buque o de parte del mismo. En ocasiones también puede hacer referencia al armador
- - __ship_crew__: Es el valor numérico de la tripulación del buque.
- - __ship_cargo_list__: Es la descripción de la lista con la información relativa a toda la carga transportada por el buque entrante (tipo de carga, cantidad, persona receptora de la carga, si la hay o “a la orden” en caso contrario, etc.). Inicialmente, se mostrará como descripción textual separada por comas, pero en una segunda fase, cada mercancía se descompondrá en los 6 siguientes campos.
- - __cargo_merchant__: Es la persona a la que iba destinada la carga, muchas veces será el comerciante que la había comprado y que se hizo cargo de ella en el momento de la descarga. Indica el destinatario de la carga, con ocasional mención a “divers” [varios/diversos].
+ - __ship_tons_capacity__: Especifica la capacidad del barco en toneladas presentada como un valor numérico con la unidad de medida. En el caso de los barcos, esto siempre es lo mismo, ya que se refiere al tonelaje del buque. Este dato se da normalmente con abreviaturas como "ton." o "t."
+ - __ship_tons_unit__: Referred to the unit of the ship's tonnage. Usually given with abbreviations such as "ton." or "t."
+ - __master_role__: Hace referencia a la categoría de la persona que comanda el buque. Puede ser capitán o patrón, aunque en algunos casos también aparece piloto. Las abreviaturas que se utilizan para designarlos suelen ser “c” y “p”, respectivamente
+ - __master_name__: Es la identificación nominal de la persona que comanda el buque. Puede aparecer de varias formas, al menos lleva el apellido, precedido de su cargo (rol). Indica el apellido del capitán del buque, a menudo precedido de “cap.” o “c.”
+ - __ship_agent_name__: Esta información puede indicar tanto el agente del buque, es decir, la persona que se encarga de las transacciones y la operación del buque, como el armador, es decir, la persona que es propietaria del buque o de parte del mismo. En ocasiones también puede hacer referencia al armador
+ - __crew_number__: Es el valor numérico de la tripulación del buque.
+ - __cargo_list__: Es la descripción de la lista con la información relativa a toda la carga transportada por el buque entrante (tipo de carga, cantidad, persona receptora de la carga, si la hay o “a la orden” en caso contrario, etc.). Inicialmente, se mostrará como descripción textual separada por comas, pero en una segunda fase, cada mercancía se descompondrá en los 6 siguientes campos.
+ - __cargo_merchant_name__: Es la persona a la que iba destinada la carga, muchas veces será el comerciante que la había comprado y que se hizo cargo de ella en el momento de la descarga. Indica el destinatario de la carga, con ocasional mención a “divers” [varios/diversos].
 En este caso vemos nombres de personas o empresas. Estos nombres tienen las mismas características y dificultades que el resto de denominaciones. En ocasiones los barcos llegaban a carga completa y estaban destinados a la misma persona, y en otros casos, cada carga tenía su destinatario. También aparece con frecuencia la expresión “a la orden”, que en principio es una carga para ser vendida a su llegada a puerto y que, por el contrario, no tiene un propietario anterior, más allá del propio capitán personalmente o por cuenta de alguien.
- - __cargo_type__: Expresa los productos o tipos de mercancías que han llegado. Es un valor muy variable, las mercancías más habituales son el carbón o el algodón, pero existe una extraordinaria diversidad de productos que llegan al puerto.
- - __cargo_value__: Expresión numérica del importe de la carga
+ - __cargo_commodity__: Expresa los productos o tipos de mercancías que han llegado. Es un valor muy variable, las mercancías más habituales son el carbón o el algodón, pero existe una extraordinaria diversidad de productos que llegan al puerto.
+ - __cargo_quantity__: Expresión numérica del importe de la carga
  - __cargo_unit__: Expresa las unidades en las que aparece la carga. Estas pueden ser unidades de peso, volumen, recuentos o unidades relativas al embalaje.
- - __cargo_origin__: Puerto de origen de la carga
- - __cargo_destination__: Puerto de destino de la carga
- - __ship_quarantine__: Información relativa a condiciones especiales de la llegada motivadas por circunstancias sanitarias.
- - __ship_forced_arrival__: Indicación sobre las causas de la llegada forzosa
+ - __cargo_port_origin__: Puerto de origen de la carga
+ - __cargo_port_destination__: Puerto de destino de la carga
+ - __quarantine__: Información relativa a condiciones especiales de la llegada motivadas por circunstancias sanitarias.
+ - __forced_arrival__: Indicación sobre las causas de la llegada forzosa
  - __ship_amount__: Este campo aparece únicamente en modelos cuantitativos donde, en lugar de especificar la información de cada buque, se indica el número de buques que han llegado o están a punto de llegar. Normalmente, se trata de un modelo específicamente pensado para el transporte de cabotaje.
  - __ship_origin_area__: Este campo aparece únicamente en modelos cuantitativos donde, en lugar de especificar la información de cada buque, se utiliza la zona de origen o de transporte. Normalmente, se trata de un modelo específicamente destinado al transporte de cabotaje.
+- __info_ship_type__: [TO DO]
+- __info_ship_name__: [TO DO]
+- __info_master_role__: [TO DO]
+- __info_master_name__: [TO DO]
+- __info_meeting_place__: [TO DO]
+- __info_meeting_date__: [TO DO]
+- __info_port_deparure__: [TO DO]
+- __cargo_info_departure_date__: [TO DO]
+- __info_port_destination__: [TO DO]
+- __info_behind__: [TO DO]
 
 Hay dos enfoques metodológicos disponibles para la extracción:
 1. **Basado en expresiones regulares**: se basa en expresiones regulares y tiene componentes definidos en la biblioteca.
