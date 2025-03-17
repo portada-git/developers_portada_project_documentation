@@ -271,7 +271,7 @@ This approach simplifies creating highly complex regex files in a human-readable
 
 ### Content Extractor Configuration
 
-Content extractors or analyzers oriented to extraction will be configured using a JSON file, whose structure allows managing the instantiation and execution of one or more extractors, whether they have a "regex" or "openAI" approach.
+Content extractors or analyzers oriented to extraction will be configured using a JSON file, whose structure allows managing the instantiation and execution of one or more extractors, whether they have a "regex" or "openai" approach.
 
 Often, the information to be extracted can respond to more than one textual pattern within the same news, section or newspaper. This forces us to work with more than one analyzer (one for each existing text pattern). For example, in the Diario de Barcelona, ​​in the same section on arrived vessels, there are two types of textual patterns: those that detail the characteristics of the trip, the vessel and the cargo transported: "From [PORT_OF_DEPARTURE] [, PORT_OF_CALL[, ... [and LAST_PORT_OF_CALL]]] in [TIME] [DAYS_HOURS], [TYPE_VESSEL] [VESSEL_NAME]..." , and those that report on coastal vessels, which instead of detailing each ship, report the number of vessels and the cargo they carry between them all. In this case, the textual pattern is: "In addition, [NUMBER_OF_VESSELS] vessels from the coast of this principality are heading to port with [DETAIL_OF_THE_CARGO]". As these are such different patterns, it will be necessary to define them separately.
 
@@ -380,7 +380,7 @@ Therefore, we have two valid ways to deal with the hierarchical information that
 
 For each of the extractors, the following characteristics must be defined in a JSON object format:
 
-- **approach_type**: Allows you to indicate the extractor's approach. It supports 'regex' or 'openAi'. It is necessary to clarify that the following configuration is specific to 'regex' since the one corresponding to 'openAi' is shown in the section related to the configuration of openAi extractors.
+- **approach_type**: Allows you to indicate the extractor's approach. It supports 'regex' or 'openai'. It is necessary to clarify that the following configuration is specific to 'regex' since the one corresponding to 'openai' is shown in the section related to the configuration of openAi extractors.
 - **configuration**: is an object that will contain the following specification:
 - **main_regex**: Name of the initial '.regex' file that will originate the entire final extraction expression.
 - **max_groups**: This is a numeric data and indicates the maximum number of groups that the expression will handle. At least the number of fields that this expression obtains should be indicated, although, if the main expression needs several alternatives, the value will be a multiple of the number of fields to be extracted (number of fields * number of alternatives).
@@ -670,7 +670,15 @@ The following example of a complete configuration serves as an illustration of w
 
 #### Configuring an OpenAI-Based Extractor
 
-[==TO DO ...==]
+The openAI parser implemented in the porTADA project can be used at any level of the text hierarchy to be analyzed, regardless of the type used at other levels. This means that a set of mixed parsers (regular expressions and openAI) can be configured.
+
+The configuration for "openai" parsers is defined using a JSON object with two main attributes: _approach_type_, which must be assigned the value "openai", and the _configuration_ field, which contains the specific configuration so that openAI can extract the information corresponding to the level for which it is configured.
+
+The configuration field is a JSON object with the following attributes:
+- _parse_by_paragraphs_: This is a Boolean type and allows you to indicate whether the analysis will be performed paragraph by paragraph or using all available text. If its value is _true_, the text of the level to be analyzed will be broken into paragraphs, and each paragraph will be passed to openAI separately. If its value is _false_, the entire text of the level will be passed to openAI.
+- _save_parsed_data_: This is another Boolean attribute to indicate whether the text of the analyzed level will be saved in the output JSON under the "parsed_text" attribute.
+- _model_: Indicates the name of the openAI model we want to use for extraction, for example "gpt-4o-mini".
+- _model_config_:
 
 ## Preparing the Configuration
 
