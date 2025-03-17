@@ -364,7 +364,7 @@ Por tanto, tenemos dos maneras válidas de tratar la información jerárquica qu
 
 Para cada uno de los extractores se deberá definir en un formato de objeto JSON las siguientes características:
 
- - **approach_type**: Permite indicar el enfoque del extractor. Admite 'regex' o 'openAi'. Es necesario clarificar que la siguiente configuración es específica para 'regex' pues la correspondiente a 'openAi' se muestra en el apartado relativo a la configuración de los extractores openAi.
+ - **approach_type**: Permite indicar el enfoque del extractor. Admite 'regex' o 'openai'. Es necesario clarificar que la siguiente configuración es específica para 'regex' pues la correspondiente a 'openai' se muestra en el apartado relativo a la configuración de los extractores openai.
  - **configuration**: es un objeto que contendrá la especificación siguiente: 
 	 - **main_regex**: Nombre del archivo '.regex' inicial que originará toda la expresión de extracción final.
 	 - **max_groups**: Este es un dato numérico e indica el número máximo de grupos que la expresión manejara. Como mínimo habría que indicar el número de campos que esta expresión obtiene, aunque, si la expresión principal necesita varias alternativas, el valor será un múltiplo del número de campos a extraer (número de campos * número de alternativas).
@@ -654,9 +654,17 @@ Para cada campo a calcular (ítem de fields_to_calculate), deberá indicarse:
 }
 ```
 
-#### Configuración de un  analizador de tipo *openAI*		
+#### Configuración de un  analizador de tipo *openai*		
 
-[==TO DO ...==]
+El analizador openai implementado en el proyecto porTADA permite ser usado en cualquier nivel correspondiente a la jerarquía del texto a analizar, con independencia del tipo usado en los otros niveles. Esto significa que podrá configurarse un conjunto de analizadores mixtos (expresiones regulares / openAI).
+
+La configuración relativa a los analizadores "openai", se define mediante un objeto JSON con dos atributos principales (_aproach_type_, que deberá tener asignado el valor "openai" y el campo _configuration_, el cual contendrá propiamente la configuración específica para que openAI pueda realizar la extracción de la información  correspondiente al nivel para el cual esté configurado.
+
+El campo configuración es un objeto JSON con los atributos siguientes:
+  - _parse_by_paragraphs_: Es de tipo booleano y permite indicar que el análisis se realizará párrafo  a párrafo o bien usando todo el texto disponible. Si su valor es _true_ el texto del nivel a analizar se romperá en párrafos y se pasará a openAI cada uno de los párrafos de forma independiente. Por contra, si su valor fuera _false_, el texto entero del nivel, se pasaría íntegro a openAI.
+  - _save_parsed_data_: Es otro atributo booleano para indicar si se requerirá guardar en el JSON de salida el texto del nivel analizado bajo el atributo  "parsed_text".
+  - _model_: Indica el nombre del modelo de openAI que deseamos usar para realizar la extracción, por ejemplo "gpt-4o-mini".
+  - _model_config_: 
 
 # Preparación de la configuración 
 
