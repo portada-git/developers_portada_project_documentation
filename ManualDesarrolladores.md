@@ -658,13 +658,30 @@ Para cada campo a calcular (ítem de fields_to_calculate), deberá indicarse:
 
 El analizador openai implementado en el proyecto porTADA permite ser usado en cualquier nivel correspondiente a la jerarquía del texto a analizar, con independencia del tipo usado en los otros niveles. Esto significa que podrá configurarse un conjunto de analizadores mixtos (expresiones regulares / openAI).
 
-La configuración relativa a los analizadores "openai", se define mediante un objeto JSON con dos atributos principales (_aproach_type_, que deberá tener asignado el valor "openai" y el campo _configuration_, el cual contendrá propiamente la configuración específica para que openAI pueda realizar la extracción de la información  correspondiente al nivel para el cual esté configurado.
+La configuración relativa a los analizadores "openai" siguen la misma estandarización que el resto de analizadores. Esto es, un objeto JSON con dos atributos principales (_aproach_type_, que deberá tener asignado el valor "openai" y el campo _configuration_, el cual contendrá propiamente la configuración específica para que openAI pueda realizar la extracción de la información  correspondiente al nivel para el cual esté configurado.
 
 El campo configuración es un objeto JSON con los atributos siguientes:
   - _parse_by_paragraphs_: Es de tipo booleano y permite indicar que el análisis se realizará párrafo  a párrafo o bien usando todo el texto disponible. Si su valor es _true_ el texto del nivel a analizar se romperá en párrafos y se pasará a openAI cada uno de los párrafos de forma independiente. Por contra, si su valor fuera _false_, el texto entero del nivel, se pasaría íntegro a openAI.
   - _save_parsed_data_: Es otro atributo booleano para indicar si se requerirá guardar en el JSON de salida el texto del nivel analizado bajo el atributo  "parsed_text".
   - _model_: Indica el nombre del modelo de openAI que deseamos usar para realizar la extracción, por ejemplo "gpt-4o-mini".
-  - _model_config_: 
+  - _model_config_: indica la configuración para el modelo escogido de "openai". Tiene formato JSON y se compone de los siguientes atributos: *temperature*, *max_tokens*, *top_p*,  *frequency_penalty* y *presence_penalty*
+  - _ai_instructions_: Corresponde a las instrucciones específicas usadas para indicar a openai como debe realizar la extracción. Se trata de un campo compuesto conteniendo:
+    - _messages_config_: Es una plantilla del mensaje a enviar en el prompt de openai con el contenido que sigue:
+      ```json
+      "messages_config": {
+         "system": {
+             "role": "system",
+                 "content": "Eres un asistente experto en extraer información estructurada de notas sobre entradas de barcos a puerto. Debes responder EXCLUSIVAMENTE con un objeto JSON válido que contenga los campos solicitados. Si no encuentras información para algún campo, debes responder con el valor null en ese campo."
+         },
+         "template": {
+             "role": "user",
+             "content": "Extrae la siguiente información del evento de entrada de barco descrita en la nota, utilizando el formato JSON exacto: {json_template}. Aquí está la definición de cada clave: {field_definitions}. Ejemplos: {input_example}. Texto de donde extraer la información: {input_text}"
+         }
+      }
+      ```
+    - _json_template_: una plantilla básica del objeto json esperado para la extracción.
+    - _json_schema_: un schema de datos en formato JSON representado el esquema que se espera que sea devuelto por openai como resultado de la extracción.
+    - _examples_: contiene un conjunto de ejemplos de la extracción, para conocimiento de openai.   
 
 # Preparación de la configuración 
 
