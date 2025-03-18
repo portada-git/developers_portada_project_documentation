@@ -681,18 +681,18 @@ The configuration field is a JSON object with the following attributes:
 - _model_config_: Indicates the configuration for the chosen "openai" model. It is in JSON format and consists of the following attributes: *temperature*, *max_tokens*, *top_p*, *frequency_penalty*, and *presence_penalty*
 - _ai_instructions_: Corresponds to the specific instructions used to tell openai how to perform the extraction. This is a composite field containing:
    - _messages_config_: This is a template for the message to be sent in the openai prompt with the following content:
-```json
-"messages_config": {
-    "system": {
-        "role": "system",
-        "content": "You are an expert assistant in extracting structured information from notes on ship arrivals at port. You must respond EXCLUSIVELY with a valid JSON object containing the requested fields. If you cannot find information for a field, you must respond with a null value for that field."
-    },
-    "template": {
-        "role": "user",
-        "content": "Extract the following information from the ship entry event described in the note, using the exact JSON format: {json_template}. Here is the definition of each key: {field_definitions}. Examples: {input_example}. Text to extract the information from: {input_text}"
-    }
-}
-```
+	```json
+	"messages_config": {
+	    "system": {
+	        "role": "system",
+	        "content": "You are an expert assistant in extracting structured information from notes on ship arrivals at port. You must respond EXCLUSIVELY with a valid JSON object containing the requested fields. If you cannot find information for a field, you must respond with a null value for that field."
+	    },
+	    "template": {
+	        "role": "user",
+	        "content": "Extract the following information from the ship entry event described in the note, using the exact JSON format: {json_template}. Here is the definition of each key: {field_definitions}. Examples: {input_example}. Text to extract the information from: {input_text}"
+	    }
+	}
+	```
    - _json_template_: A basic template of the expected JSON object for the extraction.
    - _json_schema_: A data schema in JSON format representing the schema expected to be returned by openai as a result of the extraction.
    - _examples_: contains a set of examples of the extraction, for openai's knowledge.
