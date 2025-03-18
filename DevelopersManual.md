@@ -104,7 +104,7 @@ In this case we see names of people or companies. These names have the same char
 
 Two methodological approaches are available for extraction:
 1. **Regex-based**: Built on regular expressions, with components defined in the library.
-2. **AI-based**: Utilizes generative AI (OpenAI) for data extraction.
+2. **AI-based**: Utilizes generative AI () for data extraction.
 
 ## Proxy-Based Software Design
 
@@ -672,13 +672,30 @@ The following example of a complete configuration serves as an illustration of w
 
 The openAI parser implemented in the porTADA project can be used at any level of the text hierarchy to be analyzed, regardless of the type used at other levels. This means that a set of mixed parsers (regular expressions and openAI) can be configured.
 
-The configuration for "openai" parsers is defined using a JSON object with two main attributes: _approach_type_, which must be assigned the value "openai", and the _configuration_ field, which contains the specific configuration so that openAI can extract the information corresponding to the level for which it is configured.
+The configuration for "openai" parsers follows the same standardization as the other parsers. That is, a JSON object with two main attributes: _approach_type_, which must be assigned the value "openai", and the _configuration_ field, which will contain the specific configuration so that openAI can extract the information corresponding to the level for which it is configured.
 
 The configuration field is a JSON object with the following attributes:
 - _parse_by_paragraphs_: This is a Boolean type and allows you to indicate whether the analysis will be performed paragraph by paragraph or using all available text. If its value is _true_, the text of the level to be analyzed will be broken into paragraphs, and each paragraph will be passed to openAI separately. If its value is _false_, the entire text of the level will be passed to openAI.
 - _save_parsed_data_: This is another Boolean attribute to indicate whether the text of the analyzed level will be saved in the output JSON under the "parsed_text" attribute.
 - _model_: Indicates the name of the openAI model we want to use for extraction, for example "gpt-4o-mini".
-- _model_config_:
+- _model_config_: Indicates the configuration for the chosen "openai" model. It is in JSON format and consists of the following attributes: *temperature*, *max_tokens*, *top_p*, *frequency_penalty*, and *presence_penalty*
+- _ai_instructions_: Corresponds to the specific instructions used to tell openai how to perform the extraction. This is a composite field containing:
+   - _messages_config_: This is a template for the message to be sent in the openai prompt with the following content:
+```json
+"messages_config": {
+    "system": {
+        "role": "system",
+        "content": "You are an expert assistant in extracting structured information from notes on ship arrivals at port. You must respond EXCLUSIVELY with a valid JSON object containing the requested fields. If you cannot find information for a field, you must respond with a null value for that field."
+    },
+    "template": {
+        "role": "user",
+        "content": "Extract the following information from the ship entry event described in the note, using the exact JSON format: {json_template}. Here is the definition of each key: {field_definitions}. Examples: {input_example}. Text to extract the information from: {input_text}"
+    }
+}
+```
+   - _json_template_: A basic template of the expected JSON object for the extraction.
+   - _json_schema_: A data schema in JSON format representing the schema expected to be returned by openai as a result of the extraction.
+   - _examples_: contains a set of examples of the extraction, for openai's knowledge.
 
 ## Preparing the Configuration
 
