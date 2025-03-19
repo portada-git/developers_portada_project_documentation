@@ -675,12 +675,12 @@ The openAI parser implemented in the porTADA project can be used at any level of
 The configuration for "openai" parsers follows the same standardization as the other parsers. That is, a JSON object with two main attributes: _approach_type_, which must be assigned the value "openai", and the _configuration_ field, which will contain the specific configuration so that openAI can extract the information corresponding to the level for which it is configured.
 
 The configuration field is a JSON object with the following attributes:
-- _parse_by_paragraphs_: This is a Boolean type and allows you to indicate whether the analysis will be performed paragraph by paragraph or using all available text. If its value is _true_, the text of the level to be analyzed will be broken into paragraphs, and each paragraph will be passed to openAI separately. If its value is _false_, the entire text of the level will be passed to openAI.
-- _save_parsed_data_: This is another Boolean attribute to indicate whether the text of the analyzed level will be saved in the output JSON under the "parsed_text" attribute.
-- _model_: Indicates the name of the openAI model we want to use for extraction, for example "gpt-4o-mini".
-- _model_config_: Indicates the configuration for the chosen "openai" model. It is in JSON format and consists of the following attributes: *temperature*, *max_tokens*, *top_p*, *frequency_penalty*, and *presence_penalty*
-- _ai_instructions_: Corresponds to the specific instructions used to tell openai how to perform the extraction. This is a composite field containing:
-   - _messages_config_: This is a template for the message to be sent in the openai prompt with the following content:
+- __parse_by_paragraphs__: This is a Boolean type and allows you to indicate whether the analysis will be performed paragraph by paragraph or using all available text. If its value is _true_, the text of the level to be analyzed will be broken into paragraphs, and each paragraph will be passed to openAI separately. If its value is _false_, the entire text of the level will be passed to openAI.
+- __save_parsed_data__: This is another Boolean attribute to indicate whether the text of the analyzed level will be saved in the output JSON under the "parsed_text" attribute.
+- __model__: Indicates the name of the openAI model we want to use for extraction, for example "gpt-4o-mini".
+- __model_config__: Indicates the configuration for the chosen "openai" model. It is in JSON format and consists of the following attributes: *temperature*, *max_tokens*, *top_p*, *frequency_penalty*, and *presence_penalty*
+- __ai_instructions__: Corresponds to the specific instructions used to tell openai how to perform the extraction. This is a composite field containing:
+   - __messages_config__: This is a template for the message to be sent in the openai prompt with the following content:
 	```json
 	"messages_config": {
 	    "system": {
@@ -693,9 +693,731 @@ The configuration field is a JSON object with the following attributes:
 	    }
 	}
 	```
-   - _json_template_: A basic template of the expected JSON object for the extraction.
-   - _json_schema_: A data schema in JSON format representing the schema expected to be returned by openai as a result of the extraction.
-   - _examples_: contains a set of examples of the extraction, for openai's knowledge.
+   - __json_template__: A basic template of the expected JSON object for the extraction.
+   - __json_schema__: A data schema in JSON format representing the schema expected to be returned by openai as a result of the extraction.
+   - __examples__: Contains a set of extraction examples, to improve the effectiveness of openai.
+   - __field_definitions__: Contains the definition of the fields that openai must find and extract from the text passed to it for the extraction.
+- __fields_to_assign__: Indicates the instructions for assigning the fields extracted by openai to the data structure to be returned. This allows you to assign fields with names other than those used by openai and also prepare them for applying calculators to the assigned fields. This field is an array whose items are objects with two attributes: source to indicate the name of the field that openai used for the extraction and target to indicate the name of the field to which the extracted value will be assigned.
+- __fields_to_calculate__: Allows you to define the calculations to be performed on the assigned fields. It has the same structure as that used in regex extractors. That is:
+    - **calculator**: name that identifies the calculator so that the proxy can find it.
+    - **key**: name of the field where the value calculated by this calculator will be dumped. - **temporary_field**: This is the same as its counterpart "_ fields_to_extract_". If it has already been defined previously, it will not be necessary to repeat the information here.
+    - **init_data**: This is an optional data. If it appears, it must be in _array_ format. It will indicate the multiple initializations that this calculator needs. Valid values ​​will be: "configuration", "parser_id", "constants" or "extracted_data" defined in the section [Proxy system for FieldCalculator utilities](https://github.com/portada-git/developers_portada_project_documentation/blob/main/ManualDesarrolladores.md#sistema-del-proxy-para-las-utilidades-fieldcalculator).
+    - **params**: This data is optional depending on whether the calculator requires parameters to be passed or not. If it appears, it must contain the specification of each parameter in JSON object format separated by commas. The specification of each parameter contains the indication of the parameter type and its value. The currently allowed types are: literal, fieldValue and fieldName. The literal type indicates that the value can be any and is not subject to checking for version updates. The fieldValue type indicates that the value will contain the name of the field from which the value is to be extracted before running the calculator. It supports the prefixes extracted_data or last_extracted_dat depending on whether the newly extracted value or the value obtained from the last complete extraction is desired. For example, if `["extracted_data.master_role", "last_extracted_data.master_role"]` is specified, the specified calculator will be passed the role of the person in charge obtained in the extraction process (let's say 'id.') and the same category, but whose value was obtained in the extraction of the vessel read just before the current one (let's say 'cap.'). The fieldName type indicates that the parameter value will be the name of an existing field during the extraction. It is important to use this type to facilitate the verification and updating of the configuration file fields automatically.
+    - **fieldParams**: This data is optional. If it appears, the names of the fields from which you want to obtain their value must be passed, preceded by _extracted_data._ or _last_extracted_data._, depending on whether you want the newly extracted value or the value obtained from the last complete extraction. For example, if `["extracted_data.master_role", "last_extracted_data.master_role"]` is specified, the role of the person in charge obtained in the extraction process (let's say 'id.') and the same category, but whose value was obtained in the extraction of the vessel read just before the current one (let's say 'cap.') will be passed to the specified calculator. Although this format is maintained, it is advisable to use the *params* version instead.
+    - **literalParams**: This data is optional and will correspond to the list of literal values ​​that you want to pass as parameters to the calculator. Any literal value is accepted if it is defined in _array_ format. For example: `["Havana"]. Although this format is maintained, it is advisable to use the *params* version instead.
+
+Complete example using only aopenai:
+```json
+{
+    "ai_extractor":{
+         "field_version": "boat_fact-00.00.01",
+         "constants": {"arrival_port":"Buenos Aires"},
+         "config":[
+             {
+             "approach_type": "openai",
+             "configuration": {
+                 "parse_by_paragraphs":true,
+                 "save_parsed_data":true,
+                 "microservice_initializer_file":"/etc/.cover_microservices/ms_init.properties",
+                 "model": "gpt-4o-mini",
+                 "model_config": {
+                     "temperature": 0.
+                     "max_tokens": 9000,
+                     "top_p": 0,
+                     "frequency_penalty": 0,
+                     "presence_penalty": 0
+                 },
+                 "ai_instructions": {
+                     "messages_config": {
+                          "system": {
+                              "role": "system",
+                              "content": "You are an expert assistant in extracting structured information from ship entry notes. You must respond EXCLUSIVELY with a valid JSON object containing the requested fields. If you cannot find information for a field, you must respond with a null value for that field."
+                          },
+                          "template": {
+                              "role": "user",
+                              "content": "Extract the following information from the ship entry event described in the note, using the exact JSON format: {json_template}. Here is the definition of each key: {field_definitions}. Examples: {input_example}. Text from which to extract the information: {input_text}"
+                          }
+                     },
+                     "json_template": {
+                         "travel_departure_date": null,
+                         "travel_arrival_date": null,
+                         "travel_departure_port": null,
+                         "travel_port_of_call_list": [],
+                         "ship_type": null,
+                         "ship_name": null,
+                         "ship_tons_capacity": null,
+                         "ship_tons_units": null,
+                         "ship_flag": null,
+                         "master_role": null,
+                         "master_name": null,
+                         "broker_name": null,
+                         "cargo_list": [],
+                         "quarantine": null,
+                         "forced_arrival": null,
+                         "obs": null
+                     },
+                     "json_schema":{
+                         "type": "json_schema",
+                         "json_schema": {
+                         "name": "ship_entry",
+                         "strict": true,
+                         "schema": {
+                         "type": "object",
+                         "properties": {
+                             "travel_departure_date": {
+                             "type": "string",
+                             "description": "Port departure date in YYYY-MM-DD format.",
+                             "nullable": true
+                         },
+                         "travel_arrival_date": {
+                             "type": "string",
+                             "description": "Port arrival date in YYYY-MM-DD format.",
+                             "nullable": true
+                         },
+                         "travel_departure_port": {
+                             "type": "string",
+                             "description": "Port from which the ship departed.",
+                             "nullable": true
+                         },
+                         "travel_port_of_call_list": {
+                             "type": "array",
+                             "description": "List of ports where the ship called.",
+                             "nullable": true,
+                             "items": {
+                                  "type": "object",
+                                  "properties": {
+                                      "port_of_call_place": {
+                                          "type": "string",
+                                          "description": "Port where you made the stopover.",
+                                          "nullable": true
+                                      },
+                                      "port_of_call_arrival_date": {
+                                          "type": "string",
+         				  "description": "Arrival date at the port of call.",
+                                          "nullable": true
+				      }
+                                  },
+                                  "required": ["port_of_call_place", "port_of_call_arrival_date"],
+                                  "additionalProperties": false
+                                  }
+                             },
+                             "ship_type": {
+                                 "type": "string",
+                                 "description": "Type of vessel.",
+                                 "nullable": true
+                             },
+                             "ship_name": {
+                                 "type": "string",
+                                 "description": "Ship name.",
+                                 "nullable": true
+                             },
+                             "ship_tons_capacity": {
+                                  "type": "string",
+                                  "description": "Vessel's cargo capacity in tons. Due to possible OCR transcription errors, this data will be expressed as a character string. If the transcription indicates, for example, that the vessel has a capacity of 'B7 t.', the value B7 should be entered in this field. If this value is omitted, leave this value as null."
+                                  "nullable": true
+                             },
+                             "ship_tons_units": {
+                                  "type": "string",
+                                  "description": "Specifies the units in which the vessel's dimensions are expressed. Normally tons, symbolized by the abbreviation 't.'",
+                                  "nullable": true
+                             },
+                             "ship_flag": {
+                                  "type": "string",
+                                  "description": "Country or nationality under whose flag the ship sails. Examples: 'Spanish', 'American', 'Oriental'",
+                                  "nullable": true
+                             },
+                             "master_role": {
+                                  "type": "string",
+                                  "description": "Position of the person in charge on board. It can be 'captain' abbreviated with c. or cap., 'pilot' abbreviated with pil. or 'patron' abbreviated with p. or pat.",
+                                  "nullable": true
+                             },
+                             "master_name": {
+                                  "type": "string",
+                                  "description": "Name of the person in charge on board."
+                                  "nullable": true
+                             },
+                             "broker_name": {
+                                 "type": "string",
+                                 "description": "Name of the shipping agent.",
+                                 "nullable": true
+                             },                                        
+                             "cargo_list": {
+                                  "type": "array",
+                                  "description": "List of transported goods and their owners.",
+                                  "nullable": false,
+                                  "items": {
+                                     "type": "object",
+                                     "properties": {
+                                         "cargo_merchant_name": {
+                                             "type": "string",
+                                             "description": "The owner of the cargo or the person to whom the cargo is destined."
+                                             "nullable": true
+                                         },
+                                         "cargo": {
+                                             "type": "array",
+                                             "description": "List of transported goods.",
+                                             "nullable": false,
+                                             "items": {
+                                                 "type": "object",
+                                                 "properties": {
+                                                     "cargo_quantity": {
+                                                         "type": "string",
+                                                         "description": "Represents the total amount of the cargo in numerical form. It is expressed as a character string to avoid errors in the JSON if the amount includes letters instead of numbers due to typographical or OCR transcription errors. If the transcription indicates, for example, '2I oil pipes', the value 2I must be transferred to this field. If the number is not present, the value null must be assigned.",
+                                                         "nullable": true
+                                                     },
+                                                     "cargo_unit": {
+                                                         "type": "string",
+                                                         "description": "Expresses the units of measurement in which the cargo appears. Example: 'cargo_unit': 'cj', 'cargo_unit': 'barrels', 'cargo_unit': 'id'",
+                                                         "nullable": true
+                                                     },
+                                                     "cargo_commodity": {
+                                                         "type": "string",
+                                                         "description": "Expresses the different products or types of merchandise that the ship transports. Example: 'cargo_commodity': 'glasses', 'cargo_commodity': 'id', 'cargo_commodity': 'wine'",
+                                                         "nullable": true
+                                                     }
+                                                 },
+                                                 "required": ["cargo_quantity", "cargo_unit", "cargo_commodity"],
+                                                 "additionalProperties": false
+                                             }
+                                         }
+                                     },
+                                     "required": ["cargo_merchant_name", "cargo"],
+                                     "additionalProperties": false
+                                 }
+                              },
+                              "quarantine": {
+                                 "type": "boolean",
+                                 "description": "Information regarding the existence of special arrival conditions due to health circumstances that require quarantine."
+                                 "nullable": true
+                              },
+                              "forced_arrival": {
+                                 "type": "boolean",
+                                 "description": "Information about arrival at the port due to unforeseen causes, such as a forced arrival due to storm, breakdown, or other emergencies."
+                                 "nullable": true
+                              },
+                              "obs": {
+                                 "type": "string",
+                                 "description": "Additional notes or comments that address aspects not covered in the recorded variables, providing contextual or relevant information about the event.",
+                                 "nullable": true
+                              }
+                           },
+                                "required": [
+                                    "travel_departure_date", 
+                                    "travel_arrival_date",
+                                    "travel_departure_port", 
+                                    "travel_port_of_call_list", 
+                                    "ship_type", 
+                                    "ship_name", 
+                                    "ship_tons_capacity", 
+                                    "ship_tons_units",
+                                    "ship_flag",
+                                    "master_role", 
+                                    "master_name", 
+                                    "broker_name",      
+                                    "cargo_list",
+                                    "quarantine",
+                                    "forced_arrival",
+                                    "obs"
+                                ],
+                                "additionalProperties": false
+                            }
+                         }
+                    },
+                    "examples": {
+                            "EXAMPLE 1": {
+                                "input" : "Fecha de arribo: 4 de enero de 1880; puerto de salida: Pernambuco el 23 de Dbre berg gta portugues Gomez de Castro 147 tons cap Goncalvez à J Cibils con: 40 pip caña, 50 bcas azúcar moscavada 975 bcas 75 1[4 azúcar blanca; á G Schiano 1 baul, 1 balija alhajas.",
+                                "output": "{ 'travel_departure_date': '1879-12-23', 'travel_arrival_date': '1880-01-04', 'travel_departure_port': 'Pernambuco', 'travel_port_of_call_list': [], 'ship_type': 'berg gta', 'ship_name': 'Gomez de Castro', 'ship_tons_capacity':  '147', 'ship_tons_units': ' tons', 'ship_flag': 'portugues', 'master_role': 'cap', 'master_name': 'Goncalvez', 'broker_name': 'J Cibils', 'cargo_list': [ { 'cargo_merchant_name': 'J Cibils', 'cargo': [ { 'cargo_quantity': '40', 'cargo_unit': 'pip', 'cargo_commodity': 'caña' }, { 'cargo_quantity': '50', 'cargo_unit': 'bcas', 'cargo_commodity': 'azúcar moscavada' }, { 'cargo_quantity': '975', 'cargo_unit': 'bcas', 'cargo_commodity': 'azúcar blanca' } ] }, { 'cargo_merchant_name': 'G Schiano', 'cargo': [ { 'cargo_quantity': '1', 'cargo_unit': 'baul', 'cargo_commodity': null }, { 'cargo_quantity': '1', 'cargo_unit': 'balija', 'cargo_commodity': 'alhajas' } ] } ], 'quarantine': false, 'forced_arrival': false, 'obs': '75 1[4' }"
+                            },
+                            "EXAMPLE 2": {
+                                "input":"Fecha de arribo: 5 de enero de 1880; puerto de salida: Londres Amberes Rio Janeiro y Montevido vapor inglés Horrox 1101 tons cap Eddes á E, Norton con: á Bemberg C. 5 fds bsas 1 bto mtras; J Fulton 15 cj 5 casc provisiones; Parry 115 cj merc. J. Etchegaray 10 fds medias; Tramway Ciudad de Buenos Aires 25 casc herraduras; H. Peltzer 10 cj drogas; Puerto Ensenada 24 btos acero; Ferro C, del Sud 6 cj cristaleria; Moore C.12 cj perfumeria, Hape hnos 6 fds bolsas; Orden 230 cj hojalata 331 bto merc 51 cj id 9 id papel.",
+                                "output":"{ 'travel_departure_date': null, 'travel_arrival_date': '1880-01-05', 'travel_departure_port': 'Londres', 'travel_port_of_call_list': [ { 'port_of_call_place': 'Amberes', 'port_of_call_arrival_date': null}, { 'port_of_call_place': ' Rio Janeiro', 'port_of_call_arrival_date': null}, { 'port_of_call_place': ' Montevideo', 'port_of_call_arrival_date': null} ], 'ship_type': 'vapor', 'ship_name': 'Horrox', 'ship_tons_capacity': 1101, 'ship_tons_units': 'tons', 'ship_flag': 'inglés', 'master_role': 'cap', 'master_name': 'Eddes', 'broker_name': 'E. Norton', 'cargo_list': [ { 'cargo_merchant_name': 'Bemberg C.', 'cargo': [ { 'cargo_quantity': '5', 'cargo_unit': 'fds', 'cargo_commodity': 'bsas' }, { 'cargo_quantity': '1', 'cargo_unit': 'bto', 'cargo_commodity': 'mtras' } ] }, { 'cargo_merchant_name': 'J Fulton', 'cargo': [ { 'cargo_quantity': '15, 5', 'cargo_unit': 'cj, casc', 'cargo_commodity': 'provisiones' } ] }, { 'cargo_merchant_name': 'Parry', 'cargo': [ { 'cargo_quantity': '115', 'cargo_unit': 'cj', 'cargo_commodity': 'merc.' } ] }, { 'cargo_merchant_name': 'J. Etchegaray', 'cargo': [ { 'cargo_quantity': '10', 'cargo_unit': 'fds', 'cargo_commodity': 'medias' } ] }, { 'cargo_merchant_name': 'Tramway Ciudad de Buenos Aires', 'cargo': [ { 'cargo_quantity': '25', 'cargo_unit': 'casc', 'cargo_commodity': 'herraduras' } ] }, { 'cargo_merchant_name': 'H. Peltzer', 'cargo': [ { 'cargo_quantity': '10', 'cargo_unit': 'cj', 'cargo_commodity': 'drogas' } ] }, { 'cargo_merchant_name': 'Puerto Ensenada', 'cargo': [ { 'cargo_quantity': '24', 'cargo_unit': 'btos', 'cargo_commodity': 'acero' } ] }, { 'cargo_merchant_name': 'Ferro C. del Sud', 'cargo': [ { 'cargo_quantity': '6', 'cargo_unit': 'cj', 'cargo_commodity': 'cristaleria' } ] }, { 'cargo_merchant_name': 'Moore C.', 'cargo': [ { 'cargo_quantity': '12', 'cargo_unit': 'cj', 'cargo_commodity': 'perfumeria' } ] }, { 'cargo_merchant_name': 'Hape hnos', 'cargo': [ { 'cargo_quantity': '6', 'cargo_unit': 'fds', 'cargo_commodity': 'bolsas' } ] }, { 'cargo_merchant_name': 'Orden', 'cargo': [ { 'cargo_quantity': '230', 'cargo_unit': 'cj', 'cargo_commodity': 'hojalata' }, { 'cargo_quantity': '331', 'cargo_unit': 'bto', 'cargo_commodity': 'merc' }, { 'cargo_quantity': '51', 'cargo_unit': 'cj', 'cargo_commodity': 'id' }, { 'cargo_quantity': '9', 'cargo_unit': 'id', 'cargo_commodity': 'papel' } ] }], 'quarantine': false, 'forced_arrival': false, 'obs': null }"
+                            },
+                            "EXAMPLE 3": {
+                                "input":"Fecha de arribo: 11 de enero de 1880; puerto de salida: Amberes à M. del Pont 51 cj velas; W. Paats 200 cj quesos; F F. 200 cj ginebra; F. Meyer 2 casc vino; H. Koch 58 cj manufacturas; Bemberg C. 36 fds papel; C. Riva 20 btos quesos; J, Lopez 1 cj armas; Verney C, 23 id id, A, Bunge 1 id vino; L, Logegaray 26 id 6 barriles ferreteria; Mallman C. 8 fds lana 1 bto mtras: F. Chás é hijos 61 id cristaleria C. F. Bally 30 id calzado; J. Cadmus 2 cj con: 100,000 francos 15 btos papel 917 rieles 679 btos fierro.",
+                                "output":"{ 'travel_departure_date': null, 'travel_arrival_date': '1880-01-11', 'travel_departure_port': 'Amberes', 'travel_port_of_call_list': [], 'ship_type': null, 'ship_name': null, 'ship_tons_capacity': null, 'ship_tons_units': null, 'ship_flag': null, 'master_role': null, 'master_name': null, 'broker_name': null , 'cargo_list': [ { 'cargo_merchant_name': 'M. del Pont', 'cargo': [ { 'cargo_quantity': '51', 'cargo_unit': 'cj', 'cargo_commodity': 'velas' } ] }, { 'cargo_merchant_name': 'W. Paats', 'cargo': [ { 'cargo_quantity': '200', 'cargo_unit': 'cj', 'cargo_commodity': 'quesos' } ] }, { 'cargo_merchant_name': 'F F.', 'cargo': [ { 'cargo_quantity': '200', 'cargo_unit': 'cj', 'cargo_commodity': 'ginebra' } ] }, { 'cargo_merchant_name': 'F. Meyer', 'cargo': [ { 'cargo_quantity': '2', 'cargo_unit': 'casc', 'cargo_commodity': 'vino' } ] }, { 'cargo_merchant_name': 'H. Koch', 'cargo': [ { 'cargo_quantity': '58', 'cargo_unit': 'cj', 'cargo_commodity': 'manufacturas' } ] }, { 'cargo_merchant_name': 'Bemberg C.', 'cargo': [ { 'cargo_quantity': '36', 'cargo_unit': 'fds', 'cargo_commodity': 'papel' } ] }, { 'cargo_merchant_name': 'C. Riva', 'cargo': [ { 'cargo_quantity': '20', 'cargo_unit': 'btos', 'cargo_commodity': 'quesos' } ] }, { 'cargo_merchant_name': 'J. Lopez', 'cargo': [ { 'cargo_quantity': '1', 'cargo_unit': 'cj', 'cargo_commodity': 'armas' } ] }, { 'cargo_merchant_name': 'Verney C.', 'cargo': [ { 'cargo_quantity': '23', 'cargo_unit': 'id', 'cargo_commodity': 'id' } ] }, { 'cargo_merchant_name': 'A. Bunge', 'cargo': [ { 'cargo_quantity': '1', 'cargo_unit': 'id', 'cargo_commodity': 'vino' } ] }, { 'cargo_merchant_name': 'L. Logegaray', 'cargo': [ { 'cargo_quantity': '26', 'cargo_unit': 'id', 'cargo_commodity': 'id' }, { 'cargo_quantity': '6', 'cargo_unit': 'barriles', 'cargo_commodity': 'ferreteria' } ] }, { 'cargo_merchant_name': 'Mallman C.', 'cargo': [ { 'cargo_quantity': '8', 'cargo_unit': 'fds', 'cargo_commodity': 'lana' }, { 'cargo_quantity': '1', 'cargo_unit': 'bto', 'cargo_commodity': 'mtras' } ] }, { 'cargo_merchant_name': 'F. Chás é hijos', 'cargo': [ { 'cargo_quantity': '61', 'cargo_unit': 'id', 'cargo_commodity': 'cristaleria' } ] }, { 'cargo_merchant_name': 'C. F. Bally', 'cargo': [ { 'cargo_quantity': '30', 'cargo_unit': 'id', 'cargo_commodity': 'calzado' } ] }, { 'cargo_merchant_name': 'J. Cadmus', 'cargo': [ { 'cargo_quantity': '100000', 'cargo_unit': francos, 'cargo_commodity': 'dinero' }, { 'cargo_quantity': '15', 'cargo_unit': 'btos', 'cargo_commodity': 'papel' }, { 'cargo_quantity': '917', 'cargo_unit': null, 'cargo_commodity': 'rieles' }, { 'cargo_quantity': '679', 'cargo_unit': 'btos', 'cargo_commodity': 'fierro' } ] } ], 'passengers': null, 'in_ballast': null, 'quarantine': null, 'forced_arrival': null, 'obs': null }"
+                            },
+                            "EXAMPLE 4": {
+                                "input":"Fecha de arribo: 1 de marzo de 1880; puerto de salida: Montevideo vapor inglés Saturno 200 tons cap Magnasco á P Risso con: á F Uriburu 1 cj mercs; S Biecker 9 barr vacios; B Iruol 1 paq pfts 120; Carlisle C 1 id encoms; F de las Carreras 1 fdo id de tránsito para el Uruguay 238 btos mercs.",
+                                "output":"{ 'travel_departure_date': null, 'travel_arrival_date': '1880-03-01', 'travel_departure_port': 'Montevideo', 'travel_port_of_call_list': [], 'ship_type': 'vapor', 'ship_name': 'Saturno', 'ship_tons_capacity': 200, 'ship_tons_units': tons, 'ship_flag': 'inglés', 'master_role': 'cap', 'master_name': 'Magnasco', 'broker_name': 'P Risso' , 'cargo_list': [ { 'cargo_merchant_name': 'F Uriburu', 'cargo': [ { 'cargo_quantity': '1', 'cargo_unit': 'cj', 'cargo_commodity': 'mercs' } ] }, { 'cargo_merchant_name': 'S Biecker', 'cargo': [ { 'cargo_quantity': '9', 'cargo_unit': 'barr', 'cargo_commodity': 'vacios' } ] }, { 'cargo_merchant_name': 'B Iruol', 'cargo': [ { 'cargo_quantity': '1', 'cargo_unit': 'paq', 'cargo_commodity': '120 pfts' } ] }, { 'cargo_merchant_name': 'Carlisle C', 'cargo': [ { 'cargo_quantity': '1', 'cargo_unit': 'id', 'cargo_commodity': 'encoms' } ] }, { 'cargo_merchant_name': 'F de las Carreras', 'cargo': [ { 'cargo_quantity': '1', 'cargo_unit': 'fdo', 'cargo_commodity': 'id' } ] }, { 'cargo_merchant_name': 'de tránsito para el Uruguay', 'cargo': [ { 'cargo_quantity': '238', 'cargo_unit': 'btos', 'cargo_commodity': 'mercs' } ] } ], 'passengers': null, 'in_ballast': null, 'quarantine': null, 'forced_arrival': null, 'obs': null }"
+                            }
+                        },
+                        "field_definitions":{
+                             "travel_departure_date": "The date the ship left the port of origin. This date can never be later than \"travel_arrival_date\". If it is estimated, it must be calculated relative to \"travel_arrival_date\". If the departure month is greater than the arrival month, the departure date is in the previous year. Example: If the arrival date is February 5, 1890 (1890-02-05) and the departure date is October 30, the departure month (October) is greater than the arrival month (February), so the departure date is October 30, 1889 (1889-10-30).",
+                             "travel_arrival_date": "The date the ship arrived at the port of destination. This is indicated as the 'arrival date'",
+                             "travel_departure_port": "The name of the port from which the ship departed. This is always the first port of departure (always preceded by \"port of departure: \"), subsequent ports of departure, if any, are ports of call.",
+                             "travel_port_of_call_list": "List of objects describing the ports (and optionally more information such as arrival dates) at which the ship called during its journey to the port of arrival.",
+                             "ship_type": "The type of vessel, e.g., barque, brig, brig schooner, frigate, barquentine, lugger, polacre, steamer, sumac. Common abbreviations: [berg|berg gta|gta|vap]",
+                             "ship_name": "The proper name of the ship.",
+                             "ship_tons_capacity": "The total weight or cargo capacity of the ship in tons.",
+                             "ship_tons_units": "Specifies the units in which the ship's dimensions are expressed. It usually appears in tons, but may also appear in hundredweight. Common abbreviations: [tons|ton]",
+                             "ship_flag": "The country or nationality, which may be a demonym, under whose flag the ship sails. Example: "French" brig, "Spanish" steamer, "Greek" polacre, "Oriental" packet schooner",
+                             "master_role": "The position of the responsible person on board, e.g., captain, skipper, pilot. Common abbreviations: [cap.|c.|p.]",
+                             "master_name": "The name of the responsible person on board.",
+                             "broker_name": "The name of the freight forwarder responsible for facilitating the delivery of the transported goods. In records, it is usually placed between the name of the master and the name of the first recipient of the goods. It is usually preceded by the character \"á\" and followed by the expression \"con: á\" or simply \"á\". For example: \"cap Eddes á E. Norton con: á Bemberg C. 5 fds...\". In this case, \"E. Norton\" corresponds to the freight forwarder.",
+                            "cargo_list": "List of objects that describe the goods and their respective owners or recipients. Therefore cargo_list is a list or array where each item must contain the name of the recipient and the list of characteristics of their goods. The characteristics of the goods must be the quantity, the unit of measurement and the class of merchandise or name of the product. Each object in the list must follow this structure: {'cargo_merchant_name': 'Name of the cargo recipient', 'cargo': [{'cargo_quantity': 'array of numbers', 'cargo_unit': 'unit (barrels|barrels|bocoys|bags|bordelesas|bultos|btos|boxes|cj|cjs|cascos|casc|hides|cs|bales|fds|kilos|cans|liters|pipas|pip|casks)', 'cargo_commodity': 'type of merchandise or name of the product'}]}. The amount will be expressed as a string of characters due to OCR errors that often confuse numbers with similar letters. This way, the extracted value can be indicated in the analyzed text, regardless of whether the OCR transcription was correct or not. An example cargo_list would be: [{'cargo_merchant_name':'Pedro Miralles', 'cargo':[{'cargo_quantity': 'ZO', 'cargo_unit': 'barrels', 'cargo_commodity': 'oil' }]}, {'cargo_merchant_name':'Francisco Granado', 'cargo':[{ 'cargo_quantity': '2000', 'cargo_unit': 'kilograms', 'cargo_commodity': 'cotton' }, { 'cargo_quantity': '20', 'cargo_unit': 'packages', 'cargo_commodity': 'iron' }]}]. Each consignee is associated only with the goods listed after their name. The recipient always appears on the left, followed by the corresponding goods on the right (when the name is replaced by \"to the same\" the broker_name is used; example: \"to Caleri with: to the same 540 pipes\" -> \"to the same\"==\"Caleri\"). Do not substitute the word 'to the same'. For example, the expression \"Ratto with: to the same 12014 red wine, 4014 white wine\" should be interpreted as: { \"cargo_merchant_name\": to the same, \"cargo\": [ { \"cargo_quantity\": '12014', \"cargo_unit\": null, \"cargo_commodity\": \"red wine\" }, { \"cargo_quantity\": '4014', \"cargo_unit\": null, \"cargo_commodity\": \"white wine\" } ] }. Ignore the use of the word "con" as it does not represent an attribute of the goods. If the goods are money, the quantity should correspond to the currency transported and the merchandise should be set to 'money', for example, the expression 'D. J. A. Rovira: 3,000 dollars and 15 paper bills' should be interpreted as: { 'cargo_merchant_name': 'D. J. A. Rovira', 'cargo': [ { 'cargo_quantity': 3000, 'cargo_unit': 'dollars', 'cargo_commodity': 'money' }, { 'cargo_quantity': 15, 'cargo_unit': 'btos', 'cargo_commodity': 'paper' }]}. It is common to use the words 'id', 'id.' or 'idem' to refer to the immediately preceding quantity, unit or merchandise, avoiding repetition. Examples: 'to J. Palomo 5 barrels of wine, to Messrs. Coneh and Levym 25 id id, to D. A. Casamitjana id. barrels id. and to J. M. Casamitjana id. id id'. This example should produce the following cargo_list output:[{'cargo_merchant_name':'J. Palomo', 'cargo':[{'cargo_quantity': '5', 'cargo_unit': 'barrels', 'cargo_commodity': 'wine'}]},{'cargo_merchant_name':'Mrs. Coneh and Levym', 'cargo':[{'cargo_quantity': '25', 'cargo_unit': 'barrels', 'cargo_commodity': 'wine'}]},{'cargo_merchant_name':'D. A. Casamitjana', 'cargo':[{'cargo_quantity': '25', 'cargo_unit': 'barrels', 'cargo_commodity': 'wine'}]},{'cargo_merchant_name':'J. M. Casamitjana', 'cargo':[{'cargo_quantity': '25', 'cargo_unit': 'barrels', 'cargo_commodity': 'wine'}]}]. If you don't know the value that should replace the words 'id', 'id.' or 'idem', don't make it up, leave the original word in its corresponding field. Example: 'à Cerdà 23 id id' should be resolved as:[{'cargo_merchant_name':'R. Cerdà', 'cargo':[{'cargo_quantity': '23', 'cargo_unit': 'id', 'cargo_commodity': 'id'}]}]. When the entry specifies a quantity and only one identifier (instead of two, as would be expected for unit and commodity), the identifier must be duplicated to assign it to both the unit and the commodity. Example: \"Thompson 75 boxes of fabrics; Stokes 9 id\" -> {\"cargo_merchant_name\": \"Thompson\", \"cargo\": [{\"cargo_quantity\": [75], \"cargo_unit\": \"boxes\", \"cargo_commodity\": \"fabrics\"}]}, {\"cargo_merchant_name\": \"Stokes\", \"cargo\": [{\"cargo_quantity\": [9], \"cargo_unit\": \"id\", \"cargo_commodity\": \"id\"}]}. There are goods (cargo_commodity) that do not specify units, for example 'tiles' or 'rails', or if they exist they were not specified (example: '2945 tiles'); In these cases 'cargo_unit' will be 'null' and 'cargo_commodity' will be 'baldosas' or 'rieles'. When the entry does NOT specify a unit the default value is 'null' (Example: '3 btos paper to D. A. Obiols, 7 rails and 9 btos iron to Vda. de Gracia Hernando' -> {'cargo_list':[{'cargo_merchant_name':'D. A. Obiols', 'cargo':[{'cargo_quantity': 3, 'cargo_unit': 'btos', 'cargo_commodity': 'paper' }]}, {'cargo_merchant_name':'Vda. de Gracia Hernando', 'cargo':[{ 'cargo_quantity': 7, 'cargo_unit': null, 'cargo_commodity': 'rails' }, { 'cargo_quantity': 9, 'cargo_unit': 'btos', 'cargo_commodity': 'iron' }]}]}. When the name of the recipient of the merchandise is indicated as 'on order', it means that the merchandise has no recipient because it is the property of the skipper, the captain, the owner or the consignee of the ship. For example ' 17 hams on order'. In this example the output would be: {'cargo_list':[{'cargo_merchant_name':'on order', 'cargo':[{'cargo_quantity': '17', 'cargo_unit': null, 'cargo_commodity': 'hams' }]}]}. In some cases the cargo of the vessels is not merchandise but ballast (stones, earth, etc.) to be able to navigate. When a ship carries ballast instead of merchandise it is indicated with the phrase 'in ballast.'. The output that you should return in that case is: {'cargo_list':[{'cargo_merchant_name':null, 'cargo':[{'cargo_quantity': null, 'cargo_unit': null, 'cargo_commodity': 'in ballast' }]}]}.",
+                            "quarantine": "Information regarding the existence of special conditions upon arrival due to health circumstances that require quarantine. When this occurs, the phrase 'Remains in quarantine' or 'In quarantine' is added after describing the cargo. Vessels are generally not quarantined, so in most cases nothing will be indicated. To normalize the departure, whether or not the information exists, you must always generate the 'quarantine' attribute. If the information does not appear, the value of this attribute will be 'false'; if it does, it will be 'true'.",
+                            "forced_arrival": "Information regarding arrival at the port due to unforeseen causes, such as a forced arrival due to storm, damage, or other emergencies. You must always generate the 'forced_arrival' attribute. If the information does not appear, the value of this attribute will be 'False'; if it does, it will be 'True'. If forced arrival is indicated, the cargo is usually described but the recipients. Instead, the port of destination to which the vessel was headed is indicated by the preposition 'to'. Information regarding the declaration made by the person in charge of the vessel is also usually indicated. Since there are no specific fields for this data, all of this should be recorded in an observations type field called 'obs'. Example: 'with 2 tons of wool for Rouen. -He made a declaration at 12 noon. He has arrived forced due to the storm.' -> {'cargo_list':[{'cargo_merchant_name':null, 'cargo':[{'cargo_quantity': '2', 'cargo_unit': 't.', 'cargo_commodity': 'wool'}]}], 'forced_arrival':True, 'obs':'His destination was Rouen. He made a declaration at 12 noon. It has arrived due to a storm.'}",
+                            "obs": "Additional notes or comments that address aspects not included in the recorded variables, providing contextual or relevant information about the event."
+                        }
+                    },
+                    "fields_to_assign":[
+                        {
+                            "source":"travel_departure_date",
+                            "target":"travel_departure_date"
+                        },
+                        {
+                            "source":"travel_arrival_date",
+                            "target":"travel_arrival_date"
+                        },
+                        {
+                            "source":"travel_departure_port",
+                            "target":"travel_departure_port"
+                        },
+                        {
+                            "source":"travel_port_of_call_list",
+                            "target":"travel_port_of_call_list"
+                        },
+                        {
+                            "source":"ship_type",
+                            "target":"ship_type"
+                        },
+                        {
+                            "source":"ship_name",
+                            "target":"ship_name"
+                        },
+                        {
+                            "source":"ship_tons_capacity",
+                            "target":"ship_tons_capacity"
+                        },
+                        {
+                            "source":"ship_tons_units",
+                            "target":"ship_tons_units"
+                        },
+                        {
+                            "source":"ship_flag",
+                            "target":"ship_flag"
+                        },
+                        {
+                            "source":"master_role",
+                            "target":"master_role"
+                        },
+                        {
+                            "source":"master_name",
+                            "target":"master_name"
+                        },
+                        {
+                            "source":"broker_name",
+                            "target":"broker_name"
+                        },
+                        {
+                            "source":"cargo_list",
+                            "target":"cargo_list"
+                        },
+                        {
+                            "source":"quarantine",
+                            "target":"quarantine"
+                        },
+                        {
+                            "source":"forced_arrival",
+                            "target":"forced_arrival"
+                        },
+                        {
+                            "source":"obs",
+                            "target":"ai_observations"
+                        }
+                    ],
+                    "fields_to_calculate": [
+                        {
+                            "calculator": "ReplaceIdemByValueInItemFromListCalculator",
+                            "init_data": [
+                                "configuration",
+                                "parser_id"
+                            ],
+                            "fieldParams": [
+                                "extracted_data.cargo_list",
+                                "last_extracted_data.cargo_list"
+                            ],
+                            "key": "cargo_list"
+                        }                        
+                    ]
+                }                
+            }
+        ]
+    }
+}
+```
+Complete example using regex and openai in a mixed way:
+```json
+{
+    "boatdata.extractor": {
+        "field_version": "boat_fact-00.00.01",
+        "constants": {"arrival_port": "Barcelona","news_section":"E"},
+        "config": [
+            {
+                "approach_type": "regex",
+                "configuration": {
+                    "max_groups": 15,
+                    "fields_to_extract": [
+                        {
+                            "temporary_field": true,
+                            "default_value": "y",
+                            "copy_last_value": true,
+                            "key": "time_of_arrival"
+                        },
+                        {
+                            "temporary_field": true,
+                            "default_value": "mercante",
+                            "copy_last_value": true,
+                            "key": "purposeType"
+                        },
+                        {
+                            "default_value": "????",
+                            "copy_last_value": false,
+                            "key": "ship_flag"
+                        }
+                    ],
+                    "fields_to_calculate": [
+                        {
+                            "calculator": "TimeOfArrivalRelativeToPublicationCalculator",
+                            "temporary_field": true,
+                            "init_data": [
+                                "configuration",
+                                "parser_id"
+                            ],
+                            "fieldParams": ["extracted_data.time_of_arrival"],
+                            "key": "time_of_arrival"
+                        },
+                        {
+                            "calculator": "ElapsedTimeFromArrivalToPublicationCalculator",
+                            "temporary_field": true,
+                            "fieldParams": ["extracted_data.time_of_arrival"],
+                            "key": "elapsed_days_from_arrival"
+                        }
+                    ],
+                    "main_regex": "flag"
+                }
+            },
+            {
+                "approach_type": "regex",
+                "configuration": {
+                    "max_groups": 10,
+                    "fields_to_extract": [
+                        {
+                            "default_value": "????",
+                            "copy_last_value": false,
+                            "key": "travel_departure_port"
+                        },
+                        {
+                            "default_value": "??",
+                            "copy_last_value": false,
+                            "key": "travel_duration_value"
+                        },
+                        {
+                            "default_value": "?",
+                            "copy_last_value": true,
+                            "key": "travel_duration_unit"
+                        },
+                        {
+                            "default_value": "????",
+                            "copy_last_value": false,
+                            "key": "ship_type"
+                        },
+                        {
+                            "default_value": "????",
+                            "copy_last_value": false,
+                            "key": "ship_name"
+                        },
+                        {
+                            "default_value": "????",
+                            "copy_last_value": false,
+                            "key": "ship_tons_capacity"
+                        },
+                        {
+                            "temporary_field": true,
+                            "default_value": "t.",
+                            "copy_last_value": false,
+                            "key": "ship_tons_unit"
+                        },
+                        {
+                            "default_value": "????",
+                            "copy_last_value": false,
+                            "key": "master_role"
+                        },
+                        {
+                            "default_value": "????",
+                            "copy_last_value": false,
+                            "key": "master_name"
+                        },
+                        {
+                            "default_value": "????",
+                            "copy_last_value": false,
+                            "key": "info_text",
+                            "temporary_field": true
+                        }
+                    ],
+                    "fields_to_calculate": [
+                        {
+                            "calculator": "DataFromConstantCalculator",
+                            "init_data": ["constants"],
+                            "key": "news_section",
+                            "literalParams": ["news_section"]
+                        },
+                        {
+                            "calculator": "DataFromConstantCalculator",
+                            "init_data": ["constants"],
+                            "key": "travel_arrival_port",
+                            "literalParams": ["arrival_port"]
+                        },
+                        {
+                            "calculator": "PortOfCallsFromOriginPortCalculator",
+                            "init_data": [
+                                "configuration",
+                                "parser_id",
+                                "extracted_data"
+                            ],
+                            "params": [{
+                                "type": "fieldName",
+                                "value": "travel_departure_port"
+                            }],
+                            "key": "travel_port_of_call_list"
+                        },
+                        {
+                            "calculator": "ReplaceIdemByValueCalculator",
+                            "init_data": [
+                                "configuration",
+                                "parser_id"
+                            ],
+                            "fieldParams": [
+                                "extracted_data.travel_duration_value",
+                                "last_extracted_data.travel_duration_value"
+                            ],
+                            "key": "travel_duration_value"
+                        },
+                        {
+                            "calculator": "ReplaceIdemByValueCalculator",
+                            "init_data": [
+                                "configuration",
+                                "parser_id"
+                            ],
+                            "fieldParams": [
+                                "extracted_data.travel_duration_unit",
+                                "last_extracted_data.travel_duration_unit"
+                            ],
+                            "key": "travel_duration_unit"
+                        },
+                        {
+                            "calculator": "ReplaceIdemByValueCalculator",
+                            "init_data": [
+                                "configuration",
+                                "parser_id"
+                            ],
+                            "fieldParams": [
+                                "extracted_data.travel_departure_port",
+                                "last_extracted_data.travel_departure_port"
+                            ],
+                            "key": "travel_departure_port"
+                        },
+                        {
+                            "calculator": "PreviousDateFromElapsedDaysCalculator",
+                            "fieldParams": [
+                                "extracted_data.elapsed_days_from_arrival",
+                                "extracted_data.publication_date"
+                            ],
+                            "key": "travel_arrival_date"
+                        },
+                        {
+                            "calculator": "PreviousDateFromElapsedTimeCalculator",
+                            "fieldParams": [
+                                "extracted_data.travel_duration_value",
+                                "extracted_data.travel_duration_unit",
+                                "extracted_data.travel_arrival_date"
+                            ],
+                            "key": "travel_departure_date"
+                        }
+                    ],
+                    "main_regex": "boat_fact"
+                }
+            },
+            {
+                "approach_type": "openai",
+                "source_field": "info_text",
+                "configuration": {
+                    "microservice_initializer_file":"/etc/.portada_microservices/ms_init.properties",
+                    "model": "gpt-4o-mini",
+                    "model_config": {
+                        "temperature": 0,
+                        "max_tokens": 9000,
+                        "top_p": 0,
+                        "frequency_penalty": 0,
+                        "presence_penalty": 0
+                    },
+                    "ai_instructions": {
+                        "messages_config": {
+                            "system": {
+                                "role": "system",
+                                "content": "Eres un asistente experto en extraer información estructurada de la carga transportada en barcos. Debes responder EXCLUSIVAMENTE con un objeto JSON válido que contenga los campos solicitados. Si no encuentras información para algún campo, debes responder con el valor null en ese campo."
+                            },
+                            "template": {
+                                "role": "user",
+                                "content": "Extrae la siguiente información de la carga transportada en barco, descrita en la nota, utilizando el formato JSON exacto: {json_template}. Aquí está la definición de cada clave: {field_definitions}. Ejemplos: {input_example}. Texto de donde extraer la información: {input_text}"
+                            }
+                        },
+                        "json_template": {
+                            "cargo_list":[],
+                            "quarantine":false,
+                            "forced_arrival":false,
+                            "obs":null
+                        },
+                        "json_schema":{
+                          "type": "json_schema",
+                          "json_schema": {
+                            "name": "more_entry_information",
+                            "strict": true,
+                            "schema": {
+                              "type": "object",
+                              "properties": {
+                                "cargo_list": {
+                                  "type": "array",
+                                  "description": "Lista de mercancías transportadas y sus propietarios.",
+                                  "nullable": true,
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "cargo_merchant_name": {
+                                        "type": "string",
+                                        "description": "Es el propietario de la carga o aquella persona a quien dicha carga va destinada.",
+                                        "nullable": true
+                                      },
+                                      "cargo": {
+                                        "type": "array",
+                                        "description": "Lista de mercancías transportadas.",
+                                        "nullable": true,
+                                        "items": {
+                                          "type": "object",
+                                          "properties": {
+                                            "cargo_quantity": {
+                                              "type": "string",
+                                              "description": "Representa la cantidad total de la carga en forma numérica. Se expresa como cadena de caracteres para evitar errores en el JSON si en la cantidad figuran letras en lugar de números debido a errores tipográficos o de transcripció del OCR. Si el número no está presente, debe asignarse el símbolo ?.",
+                                              "nullable": true
+                                            },
+                                            "cargo_unit": {
+                                              "type": "string",
+                                              "description": "Expresa las unidades de medida en las que la carga aparece. Ejemplo: 'cargo_unit': 'cj', 'cargo_unit':'barriles', 'cargo_unit': 'id'",
+                                              "nullable": true
+                                            },
+                                            "cargo_commodity": {
+                                              "type": "string",
+                                              "description": "Expresa los distintos productos o tipos de mercancías que transporta el buque. Ejemplo: 'cargo_commodity': 'cristales', 'cargo_commodity': 'id', 'cargo_commodity': 'vino'",
+                                              "nullable": true
+                                            }
+                                          },
+                                          "required": ["cargo_quantity", "cargo_unit", "cargo_commodity"],
+                                          "additionalProperties": false
+                                        }
+                                      }
+                                    },
+                                    "required": ["cargo_merchant_name", "cargo"],
+                                    "additionalProperties": false
+                                  }
+                                },
+                                "quarantine": {
+                                  "type": "boolean",
+                                  "description": "Información relativa a la existencia de condiciones especiales de la llegada motivadas por circunstancias sanitarias que imponen la cuarentena.",
+                                  "nullable": true
+                                },
+                                "forced_arrival": {
+                                  "type": "boolean",
+                                  "description": "Información sobre la llegada al puerto debido a causas imprevistas, como un arribo forzoso por temporal, avería u otras emergencias.",
+                                  "nullable": true
+                                },
+                                "obs": {
+                                  "type": "string",
+                                  "description": "Notas o comentarios adicionales que aborden aspectos no contemplados en las variables registradas, proporcionando información contextual o relevante sobre el evento.",
+                                  "nullable": true
+                                }
+                              },
+                              "required": [
+                                "cargo_list",
+                                "quarantine",
+                                "forced_arrival",
+                                "obs"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "examples": {
+                            "EJEMPLO 1": {
+                                "input": "con 1140 fanegas trigo á D. Juan Estrany, y 9 balas papel á D. Pedro Rius.",
+                                "output": "{'cargo_list':[{'cargo':[{'cargo_quantity':'1140', 'cargo_unit':'fanegas', 'cargo_commodity':'trigo'}], 'cargo_merchant_name':'D. Juan Estrany'},{'cargo':[{'cargo_quantity':'9', 'cargo_unit':'balas', 'cargo_commodity':'papel'}], 'cargo_merchant_name':'D. Pedro Rius.'}], 'quarentine':False, 'forced_arrival':False, 'obs':None}"
+                            },
+                            "EJEMPLO 2": {
+                                "input": "con 900 sacos harina y 6 qq. carnaza á los Sres. Font y Rindor, 54 id. à don Santiago Serra y Amat, y 17 de jamones à la órden.",
+                                "output": "{'cargo_list':[{'cargo':[{'cargo_quantity':'900', 'cargo_unit':'sacos', 'cargo_commodity':'harina'}, {'cargo_quantity':'6', 'cargo_unit':'qq', 'cargo_commodity':'carnaza'}], 'cargo_merchant_name':'Sres. Font y Rindor'},{'cargo':[{'cargo_quantity':'54', 'cargo_unit':'qq', 'cargo_commodity':'carnaza'}], 'cargo_merchant_name':'Santiago Serra y Amat'},{'cargo':[{'cargo_quantity':'17', 'cargo_unit':Null, 'cargo_commodity':'jamones'}], 'cargo_merchant_name':'a la orden'}], 'quarentine':False, 'forced_arrival':False, 'obs':None}"
+                            },
+                            "EJEMPLO 3": {
+                                "input": "con 1.300 qq. azufre á don Amadeo Cros, 400 bultos espartería a don Alejo Moragull, 400 id. id. à don Antonio Puig.",
+                                "output": "{'cargo_list':[{'cargo':[{'cargo_quantity':'1300', 'cargo_unit':'qq', 'cargo_commodity':'azufre'}], 'cargo_merchant_name':'don Amadeo Cros'},{'cargo':[{'cargo_quantity':'400', 'cargo_unit':'bultos', 'cargo_commodity':'esparteria'}], 'cargo_merchant_name':'don Alejo Moragull'},{'cargo':[{'cargo_quantity':'400', 'cargo_unit':bultos, 'cargo_commodity':'esparteria'}], 'cargo_merchant_name':'don Antonio Puig'}], 'quarentine':False, 'forced_arrival':False, 'obs':False}"
+                            },
+                            "EJEMPLO 4": {
+                                "input": "con 76,000 duelas, 284 balas algodon y 100 barriles resina á don Vicente Vilaró. Queda en cuarentena.",
+                                "output": "{'cargo_list':[{'cargo':[{'cargo_quantity':'76000', 'cargo_unit':None, 'cargo_commodity':'duelas'}, {'cargo_quantity':'284', 'cargo_unit':'balas', 'cargo_commodity':'algodón'}, {'cargo_quantity':'100', 'cargo_unit':'barriles', 'cargo_commodity':'resina'}], 'cargo_merchant_name':'don Vicente Vilaró'}], 'quarentine':True, 'forced_arrival':False, 'obs':None}"
+                            },
+                            "EJEMPLO 5": {
+                                "input": "en lastre consignado á D. Pedro Olivas.",
+                                "output": "{'cargo_list':[{'cargo':[{'cargo_quantity':None, 'cargo_unit':None, 'cargo_commodity':'en lastre'}], 'cargo_merchant_name':'D. Pedro Olivas'}], 'quarentine':False, 'forced_arrival':None, 'obs':None}"
+                            },
+                            "EJEMPLO 6": {
+                                "input": "con 519 bullos vino para Rouan. —Ha dado declaracion á las siete y media de la mañana. Viene de arribada forzosa para reparar averias.",
+                                "output": "{'cargo_list':[{'cargo':[{'cargo_quantity':'519', 'cargo_unit':'bullos', 'cargo_commodity':'vino'}], 'cargo_merchant_name':None}], 'quarentine':False, 'forced_arrival':True, 'obs':['Ha dado declaracion á las siete y media de la mañana', 'para Rouan']}"
+                            }
+                        },
+                        "field_definitions":{
+                            "cargo_list": "Lista de objetos que describen las mercancías y sus respectivos dueños o destinatarios. Por tanto cargo_list es una lista o array donde cada ítem debe contener el nombre del destinatario i la lista de características de sus mercancias. Las características de las mercancias deben ser la cantidad, la unidad de medida y la clase de mercancia. Cada objeto en la lista debe seguir esta estructura: {'cargo_merchant_name': 'Nombre del destinatario de la carga', 'cargo': [{'cargo_quantity': 'array de números', 'cargo_unit': 'unidad (barricas|barriles|bocoys|bolsas|bordelesas|bultos|btos|cajas|cj|cjs|cascos|casc|cueros|cs|fardos|fds|kilos|latas|litros|pipas|pip|toneles)', 'cargo_commodity': 'tipo de mercancía'}]}. La cantidad se expresará como una cadena de caracteres debido alos errores del OCR que a menudo confunde numeros por letras parecidas. Así podrà indicarse el valor extraido en el texto analizado con independencia de si la transcripción OCR ha sido correcta o no. Un ejemplo de cargo_list seria: [{'cargo_merchant_name':'Pedro Miralles', 'cargo':[{'cargo_quantity': 20, 'cargo_unit': 'barriles', 'cargo_commodity': 'aceite' }]}, {'cargo_merchant_name':'Francisco Granado', 'cargo':[{ 'cargo_quantity': '2000', 'cargo_unit': 'kilogramos', 'cargo_commodity': 'algodón' }, { 'cargo_quantity': '20', 'cargo_unit': 'paquetes', 'cargo_commodity': 'hierro' }]}]. Cada destinatario está asociado únicamente con las mercancías listadas inmediatamente antes de su nombre. El destinatario siempre aparece a la derecha. Si la mercancía es dinero, la cantidad debe corresponder a la moneda transportada y la mercancía debería fijarse a 'dinero', por ejemplo, la expresión '3.000 dólares y 15 btos papel à D. J. A. Rovira' debe interpretarse como: { 'cargo_merchant_name': 'D. J. A. Rovira', 'cargo': [ { 'cargo_quantity': 3000, 'cargo_unit': 'dólares', 'cargo_commodity': 'dinero' }, { 'cargo_quantity': 15, 'cargo_unit': 'btos', 'cargo_commodity': 'papel' }]}. Es común que se utilice las palabras 'id', 'id.' o 'idem' para referirse a la cantidad, unidad o mercancía inmediatamente anterior, evitando la repetición. Ejemplos: '5 toneles de vino a J. Palomo, 25 id id à los Srs. Coneh y Levym, id. barriles id. à D. A. Casamitjana y id. id id à J. M. Casamitjana'. Dicho ejemplo debería producir la salida de cargo_list sigïente:[{'cargo_merchant_name':'J. Palomo', 'cargo':[{'cargo_quantity': '5', 'cargo_unit': 'toneles', 'cargo_commodity': 'vino'}]},{'cargo_merchant_name':'Srs. Coneh y Levym', 'cargo':[{'cargo_quantity': '25', 'cargo_unit': 'toneles', 'cargo_commodity': 'vino'}]},{'cargo_merchant_name':'D. A. Casamitjana', 'cargo':[{'cargo_quantity': '25', 'cargo_unit': 'barriles', 'cargo_commodity': 'vino'}]},{'cargo_merchant_name':'J. M. Casamitjana', 'cargo':[{'cargo_quantity': '25', 'cargo_unit': 'barriles', 'cargo_commodity': 'vino'}]}]. Si no coneces el valor que debe sustituir les palabras 'id', 'id. o 'idem', no inventes, deja la palabra original en su correspondiente campo. Ejemplo: '23 id id à R. Cerdà' debe resolverse como:[{'cargo_merchant_name':'R. Cerdà', 'cargo':[{'cargo_quantity': '23', 'cargo_unit': 'id', 'cargo_commodity': 'id'}]}]. Hay mercancías (cargo_commodity) que no explicitan unidades, por ejemplo 'baldosas' o 'rieles', o si existe no fueron explicitadas (ejemplo: '2945 baldosas'); en estos casos en 'cargo_unit' será 'null' y en 'cargo_commodity' va 'baldosas' o 'rieles'. Cuando la entrada NO especifica una unidad el valor por defecto es 'null' (Ejemplo: '3 btos papel à D A. Obiols, 7 rieles y 9 btos hierro à Vda. de Gracia Hernando' -> {'cargo_list':[{'cargo_merchant_name':'D. A. Obiols', 'cargo':[{'cargo_quantity': 3, 'cargo_unit': 'btos', 'cargo_commodity': 'papel' }]}, {'cargo_merchant_name':'Vda. de Gracia Hernando', 'cargo':[{ 'cargo_quantity': 7, 'cargo_unit': null, 'cargo_commodity': 'rieles' }, { 'cargo_quantity': 9, 'cargo_unit': 'btos', 'cargo_commodity': 'hierro' }]}]}. Cuando en lugar del nombre del destinatario de la mercancía se indica 'à la orden', significa que esa mercancia no tienen destinatario porque es propiedad del patrón, del capitan o del propietario del barco. Por elemplo 'con 17 jamones à la orden'. En este ejemplo la salida sería: {'cargo_list':[{'cargo_merchant_name':'à la orden', 'cargo':[{'cargo_quantity': '17', 'cargo_unit': null, 'cargo_commodity': 'jamones' }]}]}. En algunos casos la carga las embarcaciones no son mercancias sino lastre (piedras, tierra, etc.) para poder navegar. Cuando un barco lleva lastre en lugar de mercancias se indica con la frase 'en lastre.'. La salida que debes devolver en ese caso es: {'cargo_list':[{'cargo_merchant_name':null, 'cargo':[{'cargo_quantity': null, 'cargo_unit': null, 'cargo_commodity': 'en lastre' }]}]}. En algunos casos pudiera ser que el lastre tenga un dueño o consignatario al que se deberá entregar. Este tipo de textos tienen la forma siguiente: 'en lastre á los senores Serra Y Parladé.'. la salida de este tipo de entrada serà: {'cargo_list':[{'cargo_merchant_name':'senores Serra Y Parladé', 'cargo':[{'cargo_quantity': null, 'cargo_unit': null, 'cargo_commodity': 'en lastre' }]}]}.",
+                            "quarantine": "Información relativa a la existencia de condiciones especiales de la llegada motivadas por circunstancias sanitarias que imponen la cuarentena. Cuando esto sucede, después de describir la carga se añade la frase 'Queda en cuarentena' o 'En cuarentena'. Generalment las embarcaciones no se ponen en cuarentena, por eso en la mayoría de casos no se indicarà nada. Para normalizar la salida, exista o no la información, siempre deberás generar el atributo 'quarantine', si no aparece la informació el valor de este atributo serà 'false'; si aparece será 'true'.",
+                            "forced_arrival": "Información sobre la llegada al puerto debido a causas imprevistas, como un arribo forzoso por temporal, avería u otras emergencias. Siempre deberás generar el atributo 'forced_arrival', si no aparece la informació el valor de este atributo serà 'False'; si aparece será 'True'. En caso de indicar arribo forzoso, suele describirse la carga pero no se indican los destinatarios. En su lugar se indica mediante pa preposició 'para' el puerto de destino donde se dirigía. También sule indicarse informació relativa a la declaración realizada por el responsable de la embarcació. Todo ello, al no existir campos específicos para esos datos, debería consignarse en una campo de tipo observaciones llamado 'obs'. Ejemlo: 'con 2 t. de lana para Rouan. —Ha dado declaracion á las 12 del mediodia. Viene de arribada forzosaa causa del temporal.' -> {'cargo_list':[{'cargo_merchant_name':null, 'cargo':[{'cargo_quantity': '2', 'cargo_unit': 't.', 'cargo_commodity': 'lana'}]}], 'forced_arrival':True, 'obs':'su destino era Rouan. Ha dado declaracion á las 12 del mediodia. Viene de arribada forzosaa causa del temporal.'}",
+                            "obs": "Notas o comentarios adicionales que aborden aspectos no contemplados en las variables registradas, proporcionando información contextual o relevante sobre el evento."
+                        }
+                    },
+                    "fields_to_assign":[
+                        {
+                            "source":"cargo_list",
+                            "target":"cargo_list"
+                        },
+                        {
+                            "source":"quarantine",
+                            "target":"quarantine"
+                        },
+                        {
+                            "source":"forced_arrival",
+                            "target":"forced_arrival"
+                        },
+                        {
+                            "source":"obs",
+                            "target":"ai_observations"
+                        }
+                    ],
+                    "fields_to_calculate": [
+                        {
+                            "calculator": "ReplaceIdemByValueInItemFromListCalculator",
+                            "init_data": [
+                                "configuration",
+                                "parser_id"
+                            ],
+                            "fieldParams": [
+                                "extracted_data.cargo_list",
+                                "last_extracted_data.cargo_list"
+                            ],
+                            "key": "cargo_list"
+                        }                        
+                    ]
+                }                
+            }
+        ]
+    }
+}
+```
+
 
 ## Preparing the Configuration
 
