@@ -1963,7 +1963,44 @@ Si el valor de  *ship_travel_time_unit* recién extraído es equivalente a "idem
                         }
                          ...
 ```
-
+ - *PreviousDateFromElapsedTimeCalculator*: Este calculador no necesita datos iniciales. Su objetivo es calcular una fecha previa a partir de valor numérico de tiempo expresado en días o en horas y una fecha concreta pasada como cadena de caracteres en un formato definido. El calculador recibe 4 parámetros: 
+	 - Un valor numérico que indica el tiempo transcurrido
+	 - Un valor indicando la unidad de tiempo. Si comienza por *h* se consideran horas, si lo hace por *d* se consideran días. 
+	 - La fecha a partir de la que se debe hacer el cálculo en un formato específico como cadena de caracteres.
+	 - El formato con el que la fecha se expresa. Este parámetro es opcional. Si el formato de la fecha es yyyy-MM-dd, no es necesario este parámetro. En caso contrario debe especificarse el formato. Ejemplo:
+```json
+{
+                        ...
+                        {
+                            "calculator": "PreviousDateFromElapsedTimeCalculator",
+                            "fieldParams": [
+                                "extracted_data.ship_travel_time",
+                                "extracted_data.ship_travel_time_unit",
+                                "extracted_data.ship_arrival_date"
+                            ],
+                            "literalParams":["dd-MM-yyyy"],                            
+                            "key": "ship_departure_date"
+                        }
+                         ...
+```
+ - *ReplaceIdemByValueInItemFromListCalculator*: Este calculador es específico para sustituir los pronombres "idem" del campo cargo_list cuando se extrae mediante openAI. Este extractor devuelve la lista entera de la carga, no ítem a ítem sino la lista completa con todos los ítems extraídos.  Por ello el reemplazador básico de las palabras "idem" (_ReplaceIdemByValueCalculator_) no funcionaría. _ReplaceIdemByValueInItemFromListCalculator_ recibe el nombre del campo donde se encuentra la lista recién extraída y con esta, itera por toda la lista en busca de los campos internos susceptibles de tener _idem_. Cuando los encuentra los sustituye por el valor del ítem anterior. Como datos de inicialización requiere la configuración y el parser_id. Como parámetros, recibe dos nombres de campo: el que contienen la lista de la carga recién extraída  y el que contiene la última lista extraída. Este segundo campo se necesita para poder hacer la sustitución en caso de que la lista actual comience directamente con un "idem". Vemos un ejemplo:
+```json
+{
+    ...
+    {
+        "calculator": "ReplaceIdemByValueInItemFromListCalculator",
+        "init_data": [
+            "configuration",
+            "parser_id"
+        ],
+        "fieldParams": [
+            "extracted_data.cargo_list",
+            "last_extracted_data.cargo_list"
+        ],
+        "key": "cargo_list"
+    }
+    ...
+``` 
 Podéis consultar  más información sobre los calculadores en los apartados [Sistema del proxy para las utilidades FieldCalculator](#sistema-del-proxy-para-las-utilidades-fieldcalculator) y [Configuración de cada nivel de extracción (](#configuraci%C3%B3n-de-cada-nivel-de-extracci%C3%B3n).
 
 ### Creación de nuevos calculadores
