@@ -1980,10 +1980,11 @@ If the value of the newly extracted *ship_travel_time_unit* is equivalent to "id
 ```
 
 - *PreviousDateFromElapsedTimeCalculator*: This calculator does not need initial data. Its objective is to calculate a previous date from a numerical value of time expressed in days or hours and a specific date passed as a character string in a defined format. The calculator receives 4 parameters:
-- A numerical value indicating the elapsed time
-- A value indicating the time unit. If it begins with *h* it is considered hours, if it begins with *d* it is considered days.
-- The date from which the calculation should be made in a specific format as a character string.
-- The format in which the date is expressed. This parameter is optional. If the date format is yyyy-MM-dd, this parameter is not required. Otherwise, the format must be specified. Example:
+    - A numerical value indicating the elapsed time
+    - A value indicating the time unit. If it begins with *h* it is considered hours, if it begins with *d* it is considered days.
+    - The date from which the calculation should be made in a specific format as a character string.
+    - The format in which the date is expressed. This parameter is optional. If the date format is yyyy-MM-dd, this parameter is not required. Otherwise, the format must be specified.
+Example:
 ```json
 {
                         ...
@@ -1999,7 +2000,24 @@ If the value of the newly extracted *ship_travel_time_unit* is equivalent to "id
                         }
                          ...
 ```
-
+- *ReplaceIdemByValueInItemFromListCalculator*: This calculator is specifically for replacing "idem" pronouns in the cargo_list field when extracted using openAI. This extractor returns the entire cargo list, not item by item, but the complete list with all extracted items. Therefore, the basic "idem" word replacer (_ReplaceIdemByValueCalculator_) would not work. _ReplaceIdemByValueInItemFromListCalculator_ receives the name of the field where the newly extracted list is located and, with this, it iterates through the entire list looking for internal fields that may have _idem_. When it finds them, it replaces them with the value of the previous item. As initialization data, it requires the configuration and the parser_id. As parameters, it receives two field names: the one containing the newly extracted cargo list and the one containing the last extracted list. This second field is needed to be able to perform the substitution in case the current list begins directly with an "idem". We see an example:
+```json
+{ 
+    ... 
+    { 
+        "calculator": "ReplaceIdemByValueInItemFromListCalculator", 
+        "init_data": [ 
+            "configuration", 
+            "parser_id" 
+        ], 
+        "fieldParams": [ 
+            "extracted_data.cargo_list", 
+            "last_extracted_data.cargo_list" 
+        ], 
+       "key": "cargo_list" 
+    } 
+    ...
+```
 You can find more information about calculators in the sections [Proxy system for FieldCalculator utilities](#proxy-system-for-fieldcalculator-utilities) and [Configuring each extraction level (](#configuring-each-extraction-level).
 
 ### Creating new calculators
