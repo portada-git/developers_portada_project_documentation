@@ -2000,8 +2000,50 @@ Si el valor de  *ship_travel_time_unit* recién extraído es equivalente a "idem
         "key": "cargo_list"
     }
     ...
-``` 
-Podéis consultar  más información sobre los calculadores en los apartados [Sistema del proxy para las utilidades FieldCalculator](#sistema-del-proxy-para-las-utilidades-fieldcalculator) y [Configuración de cada nivel de extracción (](#configuraci%C3%B3n-de-cada-nivel-de-extracci%C3%B3n).
+```
+  - _MsCallerCalculator_: Esta clase no es propiamente un calculador, sino que su función es enlazar la aplicación con otro calculador vía llamada a un microservicio. Esto permite crear calculadores externos a la aplicación, los cuales podrán ser llamados por esta a través de este calculador. El calculador externo puede encontrarse tanto en el servidor de microservicios de portada, como en cualquier otro servidor. Los calculadores externos reciben, por POST, un objeto json con un único campo llamado "_parameters_by_position_" conteniendo un array de los parámetros que necesitará. La respuesta esperada por _MsCallerCalculator_ es un objeto json con dos campos. El campo _status_ es numérico e indica si la llamada y el proceso han tenido éxito. Un proceso exitoso devuelve el valor 0 para el campo _status_. Cualquier valor de _status_ diferente de 0 significará que se ha producido un error durante el proceso de llamada. Si el proceso tiene exito (_status=0_), el objeto json contendrá el campo _value_ con la respuesta (cálculo) procesada por el calculador externo. Dicha respuesta será el valor devuelto por _MsCallerCalculator_, lo que se usará para modificar el valor del campo destino indicado en la configuración del _parser_. En caso de error (_status != 0_), el segundo campo se debe llamar _message_ y debe contener una explicación textual del error. Dicho mensaje será almacenado por _MsCallerCalculator_ en un fichero de registro( _log_). La respuesta de _MsCallerCalculator_ con _status_ distinto de 0 será un valor _null_, lo que impide la asignación del valor al campo destino.<br>La configuración del parser debe contener unos campos especiales, además del nombre de este calculador, los parámetros que el calculador externo debe recibir (siguiendo la sintaxis del resto de calculadores) i el nombre del campo destino. Dichos campos especiales permitirán generar la llamada al microservicio donde el calculador esté ubicado. Si se encuentra en el servidor de PorTADa, será suficiente indicar el contexto (_context_) y el nombre del punto de entrada (_entry_point_). En el servidor de portada existen 4 contextos (_'pyhthon'_, _'java'_, '_r_' y '_docker_'),  Si el microservicio se encuentra fuera del servidor de portada, deberán especificarse 4 campos: protocol, host, port y pref, además del correspondiente nombre de entrada (_entry_point_). Dichos campos permitirán generar la URL de llamada como: _protocol://host:port/pref/extry_point_). 
+
+Una posible configuración para este calculador podría ser:
+``` json
+{
+    ...
+    {
+        "calculator": "MsCallerCalculator",
+        "context": "python",
+        "entry_point":"get_date_from_publication_date_and_day_value"
+        "params": [{
+		        "type":"fieldValue",
+		        "value":"extracted_data.publication_date",
+		        "definition": "field name containing the publication date of the newspaper."
+	      },{
+				    "type":"fieldValue",
+				    "value":"extracted_data.entry_day",
+				    "description": "day of month referred to the entry day for a travel"
+        }],
+        "key": "cargo_list"
+    }
+    ...
+}
+```
+
+En el código de los microservicios de Portada debería haber una entrada 
+```pathon
+@app.route("/get_date_from_publication_date_and_day_value", methods=['POST'])  
+def get_date_from_publication_date_and_day_value():  
+    jsonp = request.get_json()  
+    params = jsonp["parameters_by_position"]  
+    pub_date = params[0]  
+    day_for_date = params[1]  
+    ...
+    try:
+	    new_date = compose_date_as(day_for_date, month, year)
+	    ret = {'status'=0, 'value'=new_date)
+	  except:
+		  ret = {'status'=-1, 'message'='Error...')
+    return jsonify(ret)
+```
+
+Podéis consultar  más información sobre los calculadores en los apartados [Sistema del proxy para las utilidades FieldCalculator](#sistema-del-proxy-para-las-utilidades-fieldcalculator) y [Configuración de cada nivel de extracción](#configuraci%C3%B3n-de-cada-nivel-de-extracci%C3%B3n).
 
 ### Creación de nuevos calculadores
 Es posible que al especificar algún extractor, necesitéis usar un tipo de cálculo todavía no implementado. Si eso ocurre, actualmente, la manera más fácil de hacerlo, es clonar el repositorio de esta aplicación codificada en JAVA desde _[jportada_boat_fact_extractor](https://github.com/portada-git/jportada_boat_fact_extractor)_ y crear una nueva clase en el paquete  "org.elsquatrecaps.autonewsextractor.dataextractor.calculators" con un nombre significativo que informe de su función. La clase debe heredar de AbstractCalculator o de RegexCalculator en función de si necesita usar alguna expresión regular compuesta con el sistema _regex_ (herencia de RegexCalculator) o no (herencia de AbstractCalculator).  La clase debe estar anotada por DataExtractorCalculatorMarkerAnnotation con un identificador único que permita distinguirlo de los demás. Si lo hacéis así, solamente deberéis implementar un único método llamado *calculate*. La mejor solución para evitar problemas de tipo y debido a que todos los campos extraídos, por defecto, son cadenas de carácter, es devolver siempre el valor en tipo texto. Para los parámetros, esperar un array de String es también una solución correcta. Podréis acceder a los datos iniciales especificados en el *extractor_config* usando el metodo `getInitData`al cual se le pase por parámetro en nombre de los datos de inicialización que encontraréis defindos en ExtraDataCalculatorEnum. Por ejemplo, si extractor_config ha especificado para este calculador la necesidad de pasar las constantes, obtendréis el valor de todas las constantes llamando a:
