@@ -656,7 +656,7 @@ Para cada campo a calcular (ítem de fields_to_calculate), deberá indicarse:
 
 #### Configuración de un  analizador de tipo *openai*		
 
-El analizador openai implementado en el proyecto porTADA permite ser usado en cualquier nivel correspondiente a la jerarquía del texto a analizar, con independencia del tipo usado en los otros niveles. Esto significa que podrá configurarse un conjunto de analizadores mixtos (expresiones regulares / openAI).
+El analizador openai implementado en el proyecto portADa permite ser usado en cualquier nivel correspondiente a la jerarquía del texto a analizar, con independencia del tipo usado en los otros niveles. Esto significa que podrá configurarse un conjunto de analizadores mixtos (expresiones regulares / openAI).
 
 La configuración relativa a los analizadores "openai" siguen la misma estandarización que el resto de analizadores. Esto es, un objeto JSON con dos atributos principales (_aproach_type_, que deberá tener asignado el valor "openai" y el campo _configuration_, el cual contendrá propiamente la configuración específica para que openAI pueda realizar la extracción de la información  correspondiente al nivel para el cual esté configurado.
 
