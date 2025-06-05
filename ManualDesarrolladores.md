@@ -2001,7 +2001,7 @@ Si el valor de  *ship_travel_time_unit* recién extraído es equivalente a "idem
     }
     ...
 ```
-  - _MsCallerCalculator_: Esta clase no es propiamente un calculador, sino que su función es enlazar la aplicación con otro calculador vía llamada a un microservicio. Esto permite crear calculadores externos a la aplicación, los cuales podrán ser llamados por esta a través de este calculador. El calculador externo puede encontrarse tanto en el servidor de microservicios de portada, como en cualquier otro servidor. Los calculadores externos reciben, por POST, un objeto json con un único campo llamado "_parameters_by_position_" conteniendo un array de los parámetros que necesitará. La respuesta esperada por _MsCallerCalculator_ es un objeto json con dos campos. El campo _status_ es numérico e indica si la llamada y el proceso han tenido éxito. Un proceso exitoso devuelve el valor 0 para el campo _status_. Cualquier valor de _status_ diferente de 0 significará que se ha producido un error durante el proceso de llamada. Si el proceso tiene exito (_status=0_), el objeto json contendrá el campo _value_ con la respuesta (cálculo) procesada por el calculador externo. Dicha respuesta será el valor devuelto por _MsCallerCalculator_, lo que se usará para modificar el valor del campo destino indicado en la configuración del _parser_. En caso de error (_status != 0_), el segundo campo se debe llamar _message_ y debe contener una explicación textual del error. Dicho mensaje será almacenado por _MsCallerCalculator_ en un fichero de registro( _log_). La respuesta de _MsCallerCalculator_ con _status_ distinto de 0 será un valor _null_, lo que impide la asignación del valor al campo destino.<br>La configuración del parser debe contener unos campos especiales, además del nombre de este calculador, los parámetros que el calculador externo debe recibir (siguiendo la sintaxis del resto de calculadores) i el nombre del campo destino. Dichos campos especiales permitirán generar la llamada al microservicio donde el calculador esté ubicado. Si se encuentra en el servidor de PorTADa, será suficiente indicar el contexto (_context_) y el nombre del punto de entrada (_entry_point_). En el servidor de portada existen 4 contextos (_'pyhthon'_, _'java'_, '_r_' y '_docker_'),  Si el microservicio se encuentra fuera del servidor de portada, deberán especificarse 4 campos: protocol, host, port y pref, además del correspondiente nombre de entrada (_entry_point_). Dichos campos permitirán generar la URL de llamada como: _protocol://host:port/pref/extry_point_). 
+  - _MsCallerCalculator_: Esta clase no es propiamente un calculador, sino que su función es enlazar la aplicación con otro calculador vía llamada a un microservicio. Esto permite crear calculadores externos a la aplicación, los cuales podrán ser llamados por esta a través de este calculador. El calculador externo puede encontrarse tanto en el servidor de microservicios de portada, como en cualquier otro servidor. Los calculadores externos reciben, por POST, un objeto json con un único campo llamado "_parameters_by_position_" conteniendo un array de los parámetros que necesitará. La respuesta esperada por _MsCallerCalculator_ es un objeto json con dos campos. El campo _status_ es numérico e indica si la llamada y el proceso han tenido éxito. Un proceso exitoso devuelve el valor 0 para el campo _status_. Cualquier valor de _status_ diferente de 0 significará que se ha producido un error durante el proceso de llamada. Si el proceso tiene exito (_status=0_), el objeto json contendrá el campo _value_ con la respuesta (cálculo) procesada por el calculador externo. Dicha respuesta será el valor devuelto por _MsCallerCalculator_, lo que se usará para modificar el valor del campo destino indicado en la configuración del _parser_. En caso de error (_status != 0_), el segundo campo se debe llamar _message_ y debe contener una explicación textual del error. Dicho mensaje será almacenado por _MsCallerCalculator_ en un fichero de registro( _log_). La respuesta de _MsCallerCalculator_ con _status_ distinto de 0 será un valor _null_, lo que impide la asignación del valor al campo destino.<br>La configuración del parser debe contener unos campos especiales para inicializarlo, además del nombre de este calculador, los parámetros que el calculador externo debe recibir (siguiendo la sintaxis del resto de calculadores) i el nombre del campo destino. Los campos especiales de inicialización permitirán generar la llamada al microservicio donde el calculador esté ubicado. Si se encuentra en el servidor de PorTADa, será suficiente indicar el contexto (_context_) y el nombre del punto de entrada (_entry_point_). En el servidor de portada existen 4 contextos (_'python'_, _'java'_, '_r_' y '_docker_'),  Si el microservicio se encuentra fuera del servidor de portada, deberán especificarse 4 campos: protocol, host, port y pref, además del correspondiente nombre de entrada (_entry_point_). Dichos campos especiales se especificarán en una posición del array init_data pues inializaran el calculador permitiendo generar la URL de llamada como: _protocol://host:port/pref/extry_point_). 
 
 Una posible configuración para este calculador podría ser:
 ``` json
@@ -2009,8 +2009,31 @@ Una posible configuración para este calculador podría ser:
     ...
     {
         "calculator": "MsCallerCalculator",
-        "context": "python",
-        "entry_point":"get_date_from_publication_date_and_day_value"
+	"init_data":[{
+        	"context": "python",
+        	"entry_point":"get_date_from_publication_date_and_day_value"
+	}],
+        "params": [{
+		        "type":"fieldValue",
+		        "value":"extracted_data.publication_date",
+		        "definition": "field name containing the publication date of the newspaper."
+	      },{
+				    "type":"fieldValue",
+				    "value":"extracted_data.entry_day",
+				    "description": "day of month referred to the entry day for a travel"
+        }],
+        "key": "cargo_list"
+    }
+    ...
+    {
+        "calculator": "MsCallerCalculator",
+	"init_data":[{
+        	"protocol":"https",
+		"host":"site.of.this.calculator.com",
+		"port":"5271",
+		"pref":"calculators",
+        	"entry_point":"get_duration_trip_value"
+	}],
         "params": [{
 		        "type":"fieldValue",
 		        "value":"extracted_data.publication_date",
@@ -2027,7 +2050,7 @@ Una posible configuración para este calculador podría ser:
 ```
 
 En el código de los microservicios de Portada debería haber una entrada 
-```pathon
+```python
 @app.route("/get_date_from_publication_date_and_day_value", methods=['POST'])  
 def get_date_from_publication_date_and_day_value():  
     jsonp = request.get_json()  
@@ -2038,6 +2061,22 @@ def get_date_from_publication_date_and_day_value():
     try:
 	    new_date = compose_date_as(day_for_date, month, year)
 	    ret = {'status'=0, 'value'=new_date)
+	  except:
+		  ret = {'status'=-1, 'message'='Error...')
+    return jsonify(ret)
+```
+Y en el servidor site.of.this.calculator.com, la entrada podría ser:
+```python
+@app.route("calculators/get_duration_trip_value", methods=['POST'])  
+def get_duration_trip_value():  
+    jsonp = request.get_json()  
+    params = jsonp["parameters_by_position"]  
+    departure_date = params[0]  
+    arrival_date = params[1]  
+    ...
+    try:
+	    days = days_form_date_to_date(departure_date, arrival_date)
+	    ret = {'status'=0, 'value'=days)
 	  except:
 		  ret = {'status'=-1, 'message'='Error...')
     return jsonify(ret)
