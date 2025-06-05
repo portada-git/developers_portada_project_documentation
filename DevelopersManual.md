@@ -2016,15 +2016,19 @@ Example:
     } 
     ...
 ```
-  - _MsCallerCalculator_: This class is not a calculator, but rather its function is to link the application to another calculator via a call to a microservice. This allows the creation of calculators external to the application, which can be called by the application through this calculator. The external calculator can be located either on the front-end microservices server or on any other server. External calculators receive, via POST, a JSON object with a single field called "_parameters_by_position_" containing an array of the parameters it will need. The response expected by _MsCallerCalculator_ is a JSON object with two fields. The _status_ field is numeric and indicates whether the call and the process were successful. A successful process returns a value of 0 for the _status_ field. Any _status_ value other than 0 means that an error occurred during the call process. If the process is successful (_status=0_), the json object will contain the _value_ field with the response (calculation) processed by the external calculator. This response will be the value returned by _MsCallerCalculator_, which will be used to modify the value of the destination field indicated in the _parser_ configuration. In case of error (_status != 0_), the second field must be called _message_ and must contain a textual explanation of the error. This message will be stored by _MsCallerCalculator_ in a log file. The response from _MsCallerCalculator_ with _status_ other than 0 will be a _null_ value, which prevents the assignment of the value to the destination field.<br>The parser configuration must contain some special fields, in addition to the name of this calculator, the parameters that the external calculator must receive (following the syntax of the rest of the calculators) and the name of the destination field. These special fields will allow you to generate the call to the microservice where the calculator is located. If it is located on the PorTADa server, it will be sufficient to specify the context (_context_) and the entry point name (_entry_point_). On the front-end server, there are four contexts (_'python'_, _'java'_, '_r_', and '_docker_'). If the microservice is located outside the front-end server, four fields must be specified: protocol, host, port, and pref, in addition to the corresponding entry point name (_entry_point_). These fields will allow you to generate the call URL as: _protocol://host:port/pref/entry_point_). A possible configuration for this calculator could be:
+   - _MsCallerCalculator_: This class is not a calculator, but rather its function is to link the application to another calculator via a call to a microservice. This allows the creation of calculators external to the application, which can be called by the application through this calculator. The external calculator can be located either on the PorTADa microservices server or on any other server. External calculators receive, via POST, a JSON object with a single field called "_parameters_by_position_" containing an array of the parameters it will need. The response expected by _MsCallerCalculator_ is a JSON object with two fields. The _status_ field is numeric and indicates whether the call and the process were successful. A successful process returns a value of 0 for the _status_ field. Any _status_ value other than 0 means that an error occurred during the call process. If the process is successful (_status=0_), the JSON object will contain the _value_ field with the response (calculation) processed by the external calculator. This response will be the value returned by _MsCallerCalculator_, which will be used to modify the value of the destination field indicated in the _parser_ configuration. In case of error (_status != 0_), the second field must be called _message_ and must contain a textual explanation of the error. This message will be stored by _MsCallerCalculator_ in a log file. The response from _MsCallerCalculator_ with a _status_ other than 0 will be a _null_ value, which prevents the value from being assigned to the target field.<br>The parser configuration must contain some special fields (specified as item in the init_data array) to initialize it, in addition to the name of this calculator, the parameters that the external calculator must receive (following the syntax of the rest of the calculators) and the name of the target field. The special initialization fields will allow generating the call to the microservice where the calculator is located. If it is located on the PorTADa server, it will be enough to indicate the context (_context_) and the name of the entry point (_entry_point_). There are 4 contexts on the PorTADa server (_'python'_, _'java'_, '_r_' and '_docker_'). If the microservice is located outside the PorTADa server, 4 fields must be specified: protocol, host, port and pref, in addition to the corresponding entry name (_entry_point_). These special fields will initialize the calculator allowing the call URL to be generated as: _protocol://host:port/pref/entry_point_).
+
+A possible configuration for this calculator could be:
 ``` json
 {
  	...
  	{
  		"calculator": "MsCallerCalculator",
- 		"context": "python",
- 		"entry_point":"get_date_from_publication_date_and_day_value"
- 		"params": [{
+		"init_data":[{ 
+			"context": "python", 
+			"entry_point":"get_date_from_publication_date_and_day_value" 
+		}],
+  		"params": [{
  			"type":"fieldValue",
  			"value":"extracted_data.publication_date",
  			"definition": "field name containing the publication date of the newspaper."
@@ -2035,6 +2039,27 @@ Example:
  		}],
  		"key": "cargo_list"
  	}
+	... 
+	{ 
+		"calculator": "MsCallerCalculator", 
+		"init_data":[{ 
+			"protocol":"https", 
+			"host":"site.of.this.calculator.com", 
+			"port":"5271", 
+			"pref":"calculators", 
+			"entry_point":"get_duration_trip_value" 
+		}], 
+		"params": [{ 
+			"type":"fieldValue", 
+			"value":"extracted_data.publication_date", 
+			"definition": "field name containing the publication date of the newspaper." 
+		},{ 
+			"type":"fieldValue", 
+			"value":"extracted_data.entry_day", 
+			"description": "day of month referred to the entry day for a travel" 
+		}], 
+		"key": "cargo_list" 
+	} 
  ...
 }
 ```
@@ -2055,6 +2080,23 @@ def get_date_from_publication_date_and_day_value():
  		ret = {'status'=-1, 'message'='Error...')
  	return jsonify(ret)
 ```
+And on the site.of.this.calculator.com server, the entry could be:
+```python
+@app.route("calculators/get_duration_trip_value", methods=['POST'])
+def get_duration_trip_value(): 
+	jsonp = request.get_json() 
+	params = jsonp["parameters_by_position"] 
+	departure_date = params[0] 
+	arrival_date = params[1] 
+	... 
+	try: 
+		days = days_form_date_to_date(departure_date, arrival_date) 
+		ret = {'status'=0, 'value'=days) 
+	except: 
+		ret = {'status'=-1, 'message'='Error...') 
+	return jsonify(ret)
+```
+
 You can find more information about calculators in the sections [Proxy system for FieldCalculator utilities](#proxy-system-for-fieldcalculator-utilities) and [Configuring each extraction level (](#configuring-each-extraction-level).
 
 ### Creating new calculators
