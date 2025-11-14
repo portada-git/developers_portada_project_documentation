@@ -55,7 +55,7 @@ This feature extracts and classifies information from the target text into prede
 - __model_version__: Indicates the version of the model field name.
 - __parsed_text__: This is a fragment of text corresponding to a single entry from which the data has been extracted.
 - __publication_date__: Displays the date of the newspaper
-- __publication_name__: Displays the name of the newspaper
+- __publication_name__: Shows the name of the newspaper in its shortened version: DB for Diario de Barcelona, ​​DM for Diario de la Marina, LP for La Prensa de Buenos Aires or SM for Le Semaphore de Marsella, ...
 - __publication_edition__: Indicates the edition of the newspaper in case there is more than one a day: M for morning, T for afternoon or N for night. In case there is only one edition the value will be U (unique).
 - __news_section__: It is the type of news that is analyzed. It can take values ​​such as E for ship entries or M for discharge manifests.
 - __travel_departure_port__: Indicates the port of departure of the ship on this voyage
