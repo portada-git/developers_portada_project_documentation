@@ -52,6 +52,7 @@ La última de las funcionalidades tiene como objetivo extraer los datos contenid
  - __publication_date__: Muestra la fecha del periódico
  - __publication_name__: Muestra el nombre del periódico
  - __publication_edition__: Indica la edición del periódico en caso de que haya más de una al día: M para mañana, T para tarde o N para noche. En caso de que haya una sola edición el valor será U (única).
+ - __parsed_text__: Es es fragmento de texto correspondiente a un única entrada des de el cual se ha realizado la extración de los datos.
  - __news_section__: Es el tipo de noticia que se analiza. Puede tomar valores como E para entradas de buques o M para manifiestos de descarga.
  - __travel_departure_port__: Indica el puerto de salida del buque en este viaje
  - __travel_arrival_port__: Indica el puerto de llegada (Marsella, Buenos Aires, La Habana o Barcelona) del buque en este viaje. En la mayoría de los casos, esta información no aparece en las noticias y se deduce implícitamente según el periódico
