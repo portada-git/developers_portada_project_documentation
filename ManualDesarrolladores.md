@@ -51,7 +51,7 @@ La última de las funcionalidades tiene como objetivo extraer los datos contenid
  - __model_version__: Indica la versión del nombre del campo model.
  - __parsed_text__: Es es fragmento de texto correspondiente a un única entrada des de el cual se ha realizado la extración de los datos.
  - __publication_date__: Muestra la fecha del periódico
- - __publication_name__: Muestra el nombre del periódico en su version reducida: DB pa el Diario de Barcelona, DM para el diario de la Marina, LP para La Prensa de Buenos Aires o SM para Le Semaphore de Marsella.
+ - __publication_name__: Muestra el nombre del periódico en su version reducida: DB pa el Diario de Barcelona, DM para el diario de la Marina, LP para La Prensa de Buenos Aires o SM para Le Semaphore de Marsella, ...
  - __publication_edition__: Indica la edición del periódico en caso de que haya más de una al día: M para mañana, T para tarde o N para noche. En caso de que haya una sola edición el valor será U (única).
  - __news_section__: Es el tipo de noticia que se analiza. Puede tomar valores como E para entradas de buques o M para manifiestos de descarga.
  - __travel_departure_port__: Indica el puerto de salida del buque en este viaje
