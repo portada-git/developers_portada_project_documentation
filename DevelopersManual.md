@@ -53,6 +53,7 @@ Once all the blocks are merged into one, this function extracts the target news 
 This feature extracts and classifies information from the target text into predefined categories, referred to as *fields*. These fields include:
 
 - __model_version__: Indicates the version of the model field name.
+- __parsed_text__: This is a fragment of text corresponding to a single entry from which the data has been extracted.
 - __publication_date__: Displays the date of the newspaper
 - __publication_name__: Displays the name of the newspaper
 - __publication_edition__: Indicates the edition of the newspaper in case there is more than one a day: M for morning, T for afternoon or N for night. In case there is only one edition the value will be U (unique).
